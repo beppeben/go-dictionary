@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>AZ Jewels</title>
+    <meta name="description" content="The reference for jewelry">
+    <!--<link rel="shortcut icon" href="https://pixabay.com/favicon.ico">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/yahoo/pure-release/v0.6.0/pure-min.css">
+    <link rel="stylesheet" href="/css/mystyle.css">
+</head>
+<body>
+    <div style="max-width:900px;padding:0 10px;margin:40px auto;text-align:center">
+        <a href="/"><h1>AZ Jewels</h1></a>
+        <h2>The global reference for Jewelry and Horology</h2>
+    </div>
+    <form onsubmit="$('#search-text').blur();return false;" class="pure-form" style="border-top: 1px solid #eee;border-bottom:1px solid #eee;background:#fafafa;margin:30px 0;padding:20px 10px;text-align:center">
+        <input id="search-text" autofocus type="text" name="q" placeholder="Search word..." style="width:100%;max-width:600px;outline:0">
+	
+	<select id="select">
+	{{$langs := .Languages}}
+	{{range $lang1 := $langs}}
+	  <optgroup label="{{$lang1}}">
+		{{range $lang2 := $langs}}
+			{{if ne $lang1 $lang2}}
+			<option value="{{langsToKey $lang1 $lang2}}">{{$lang1}}-{{$lang2}}</option>
+			{{end}}
+		{{end}}	    
+	  </optgroup>
+	{{end}}
+	</select>
+    </form>
+	
+	{{if .Results}}
+	<div id="container">
+		<table class="translations">
+			<tbody>
+				<tr>
+					<td colspan="3" title="Principal Translations"></td>
+				</tr>
+				<tr class="langHeader">
+					<td>{{with $x := index .Results 0}}{{toUpper $x.LangKey}}</td><td></td><td>{{with $y:=index $x.Translations 0}}{{toUpper $y.LangKey}}{{end}}{{end}}</td>
+				</tr>
+				{{range $wordindex, $word := .Results}}
+					{{range $tranindex, $tran := $word.Translations}}
+						<tr class="{{oddOrEven $wordindex}}">
+							<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}</strong>{{end}}</td>
+							<td style="width:60%;">{{if $word.Description}}({{$word.Description}}){{end}} {{if $tran.Description}}<span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
+							<td>{{$tran.Word}}</td>
+						</tr>
+					{{end}}
+				{{end}}
+			</tbody>
+		</table>
+	</div>
+	{{end}}
+    
+    <script src="/js/jquery-1.11.1.min.js"></script>
+    <script src="/js/jquery.auto-complete.js"></script>
+    <script>
+	
+	var sel = document.getElementById("select");
+
+	var myRe = new RegExp("search/(.+)/", "g");
+	var myArray = myRe.exec(window.location.href);
+
+	if (myArray != null) {
+		sel.value = myArray[1];
+	}
+	
+	/*
+	var langkey = document.getElementById("select").value;
+	
+	if (myArray != null) {
+		document.getElementById("select").value = myArray[1];
+		langkey = myArray[1];
+	}
+	
+	function changeLanguages(sel) {
+		langkey = sel.value;
+	}
+	*/
+	
+	$(function() {
+		$('#search-text').autoComplete({
+          	minChars: 2,
+			source: function(term, response){
+        			$.getJSON('http://localhost:8080/services/autocomplete/' + sel.value, { term: term }, function(data){ 
+					response(data);
+				});
+			},
+			renderItem: function (item, search){
+           		search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+               	var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
+               	return '<div class="autocomplete-suggestion" data-term="'+item.w+'" data-val="'+search+'">'+ '(' + item.t + ') '+item.w.replace(re, "<b>$1</b>")+'</div>';
+            },
+			onSelect: function(e, term, item){
+             	//console.log('Item selected by '+(e.type == 'keydown' ? 'pressing enter or tab' : 'mouse click')+'.');
+               	$('#search-text').val(item.data('term'));
+				window.location.replace("/search/" + sel.value + "/" + item.data('term'));
+          	},
+			cache: false
+     	});
+	})
+
+	 
+            
+    </script>
+</body>
+</html>

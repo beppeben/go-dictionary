@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<p><b>Deploy Frontend</b></p>
+<form action="services/deployFront" method="post" enctype="multipart/form-data">
+  <input type="file" name="bundle" accept=".zip">
+  <input type="submit">
+</form>
+
+<p><b>Deploy Database</b></p>
+<form action="services/deployDb" method="post" enctype="multipart/form-data">
+  <input type="file" name="bundle" accept=".xlsx">
+  <input type="submit">
+</form>
+
+
+</body>
+</html>
