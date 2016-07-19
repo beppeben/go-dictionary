@@ -1,7 +1,5 @@
 package domain
 
-//"bytes"
-
 type Word struct {
 	Word         string
 	LangKey      string

@@ -13,7 +13,6 @@ import (
 )
 
 type Repository interface {
-	//GetAllWords(lang1 string, lang2 string) (words []*SimpleWord, err error)
 	ResetDB() error
 	GetLangFromKey(key string) string
 	Search(word string, fromLang string, toLang string) (words []*Word, err error)
@@ -22,7 +21,6 @@ type Repository interface {
 }
 
 type ServerConfig interface {
-	GetServerUrl() string
 	GetHTTPDir() string
 	GetAdminPass() string
 	GetServerPort() string
@@ -95,13 +93,6 @@ func wrapHandler(h http.Handler) httprouter.Handle {
 }
 
 func (handler WebserviceHandler) FrontHandler(w http.ResponseWriter, r *http.Request) {
-	/*
-		if strings.HasPrefix(r.URL.Path, "/services") {
-			handler.mrouter.ServeHTTP(w, r)
-		} else {
-			handler.frouter.ServeHTTP(w, r)
-		}
-	*/
 	if strings.HasPrefix(r.URL.Path, "/css") || strings.HasPrefix(r.URL.Path, "/js") ||
 		strings.HasPrefix(r.URL.Path, "/deploy.html") {
 		handler.frouter.ServeHTTP(w, r)
