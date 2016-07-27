@@ -1,4 +1,5 @@
 DB_NAME = "jewels"
+DB_USER = "myuser"
 DB_PASS = "mypass"
 ADMIN_PASS = "mypass"
 HTTP_DIR = "/var/www/jewels/"

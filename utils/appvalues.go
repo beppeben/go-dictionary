@@ -29,6 +29,10 @@ func (val *AppConfig) GetDBName() string {
 	return val.v.GetString("DB_NAME")
 }
 
+func (val *AppConfig) GetUserDB() string {
+	return val.v.GetString("DB_USER")
+}
+
 func (val *AppConfig) GetPassDB() string {
 	return val.v.GetString("DB_PASS")
 }

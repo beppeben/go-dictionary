@@ -56,7 +56,7 @@ func getDbType(sample string, title string) string {
 			return "INT"
 		}
 	}
-	if title == "parent" || title == "synonyms" {
+	if title == "parent" || title == "synonyms" || title == "field" {
 		return "INT"
 	}
 	if title == "english_id" {
@@ -148,7 +148,7 @@ func (r *SqlRepo) createTableFromMatrix(tx *sql.Tx, title string, matrix [][]str
 		st_insert += matrix[0][i]
 	}
 	st_create += ")"
-	//log.Debug(st_create)
+	log.Debug(st_create)
 	_, err := tx.Exec(st_create)
 	checkError(err, title)
 
@@ -177,7 +177,7 @@ func (r *SqlRepo) createTableFromMatrix(tx *sql.Tx, title string, matrix [][]str
 	}
 	st_insert += buffer.String()
 	st_insert = st_insert[0 : len(st_insert)-1]
-	//log.Debug(st_insert)
+	log.Debug(st_insert)
 
 	_, err = tx.Exec(st_insert, vals...)
 	checkError(err, title)
@@ -185,7 +185,8 @@ func (r *SqlRepo) createTableFromMatrix(tx *sql.Tx, title string, matrix [][]str
 
 func (r *SqlRepo) checkLanguageHeaders(title string, headers []string) error {
 	if len(headers) != len(r.languages) {
-		return fmt.Errorf("Table %v does not contain all the language columns", title)
+		return fmt.Errorf("Table %v does not contain all the language columns: "+
+			"expected %d, got %d", title, len(r.languages), len(headers))
 	}
 	headers_sorted := make([]string, len(headers))
 	languages_sorted := make([]string, len(r.languages))
@@ -229,10 +230,10 @@ func (r *SqlRepo) ResetDB() error {
 		return err
 	}
 	err = r.handler.TransactNoRet(func(tx *sql.Tx) error {
+		log.Debugf("%d languages currently stored", len(r.languages))
 		if len(r.languages) > 0 {
 			log.Info("Removing all tables")
 			tx.Exec("DROP TABLE fields_expl")
-			tx.Exec("DROP TABLE fields")
 			tx.Exec("DROP TABLE languages")
 			for _, lang := range r.languages {
 				if lang == "english" {
@@ -241,6 +242,7 @@ func (r *SqlRepo) ResetDB() error {
 				tx.Exec("DROP TABLE " + lang)
 			}
 			tx.Exec("DROP TABLE english")
+			tx.Exec("DROP TABLE fields")
 		}
 		var err error
 		if err = r.reader.RefreshFile(); err != nil {
@@ -258,8 +260,9 @@ func (r *SqlRepo) ResetDB() error {
 		r.createTable(tx, "english", &ImportOptions{})
 
 		tx.Exec("ALTER TABLE english ADD FOREIGN KEY(synonyms) REFERENCES english(id)")
-
 		tx.Exec("ALTER TABLE english ADD FOREIGN KEY(parent) REFERENCES english(id)")
+		tx.Exec("ALTER TABLE english ADD FOREIGN KEY(field) REFERENCES fields(id)")
+		tx.Exec("ALTER TABLE fields_expl ADD FOREIGN KEY(id) REFERENCES fields(id)")
 
 		tx.Exec("CREATE INDEX idx ON english(synonyms)")
 		tx.Exec("CREATE INDEX wrd_eng ON english(word)")

@@ -5,19 +5,24 @@ import (
 	"sort"
 	"strings"
 
-	//log "github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	. "github.com/beppeben/go-dictionary/domain"
 )
 
 const (
-	translationsAndForeignSynonymsFromAny = "WITH RECURSIVE toeng(:lang1, english, syn, enid) AS" +
+	translationsAndForeignSynonymsFromAnyBase = "WITH RECURSIVE toeng(:lang1, english, syn, enid) AS" +
 		"(SELECT :lang1.word, english.word, english.synonyms, english.id  FROM :lang1 " +
 		"INNER JOIN english ON :lang1.english_id=english.id " +
 		"UNION " +
 		"SELECT CAST('' as VARCHAR(255)), english.word, english.synonyms, english.id " +
-		"FROM english JOIN toeng ON toeng.syn=english.id OR toeng.enid=english.synonyms) " +
+		"FROM english JOIN toeng ON toeng.syn=english.id OR toeng.enid=english.synonyms) "
+
+	translationsAndForeignSynonymsFromAnyToAny = translationsAndForeignSynonymsFromAnyBase +
 		"SELECT :lang1, :lang2.word AS :lang2 FROM toeng " +
 		"INNER JOIN :lang2 ON toeng.enid=:lang2.english_id;"
+
+	translationsAndForeignSynonymsFromAnyToEng = translationsAndForeignSynonymsFromAnyBase +
+		"SELECT :lang1, english FROM toeng;"
 
 	translationsAndForeignSynonymsFromEng = "SELECT english.word, :lang.word FROM english " +
 		"INNER JOIN :lang ON english.id=:lang.english_id;"
@@ -43,18 +48,30 @@ func translationsAndForeignSynonymsStmt(lang1 string, lang2 string) string {
 	var s string
 	if lang1 == lang2 {
 		s = strings.Replace(allWords, ":lang", lang1, -1)
-	} else if lang1 == "english" || lang2 == "english" {
+	} else if lang1 == "english" {
+		s = strings.Replace(translationsAndForeignSynonymsFromEng, ":lang", lang2, -1)
+		//s = strings.Replace(translationsAndForeignSynonymsFromAnyToEng, ":lang1", lang, -1)
+	} else if lang2 == "english" {
+		s = strings.Replace(translationsAndForeignSynonymsFromAnyToEng, ":lang1", lang1, -1)
+	} else {
+		s = translationsAndForeignSynonymsFromAnyToAny
+		s = strings.Replace(s, ":lang1", lang1, -1)
+		s = strings.Replace(s, ":lang2", lang2, -1)
+	}
+
+	/*else if lang1 == "english" || lang2 == "english" {
 		lang := lang1
 		if lang1 == "english" {
 			lang = lang2
 		}
-		s = strings.Replace(translationsAndForeignSynonymsFromEng, ":lang", lang, -1)
+		//s = strings.Replace(translationsAndForeignSynonymsFromEng, ":lang", lang, -1)
+		s = strings.Replace(translationsAndForeignSynonymsFromAnyToEng, ":lang1", lang, -1)
 	} else {
 		s = translationsAndForeignSynonymsFromAny
 		s = strings.Replace(s, ":lang1", lang1, -1)
 		s = strings.Replace(s, ":lang2", lang2, -1)
 	}
-	//log.Info(s)
+	*/
 	return s
 }
 
@@ -104,25 +121,29 @@ func (r *SqlRepo) GetWords(lang1 string, lang2 string) (words1 []*SimpleWord, wo
 	}
 	set1 := make(map[string]bool)
 	set2 := make(map[string]bool)
-	var swap bool
-	if lang1 == "english" || lang2 == "english" {
-		if lang2 == "english" {
-			lang2 = lang1
-			lang1 = "english"
-			swap = true
+	/*
+		var swap bool
+		if lang1 == "english" || lang2 == "english" {
+			if lang2 == "english" {
+				lang2 = lang1
+				lang1 = "english"
+				swap = true
+			}
+			r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
+			if swap {
+				temp := set2
+				set2 = set1
+				set1 = temp
+				lang1 = lang2
+				lang2 = "english"
+			}
+		} else {
+			r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
+			r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang2, lang1), set2, set1)
 		}
-		r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
-		if swap {
-			temp := set2
-			set2 = set1
-			set1 = temp
-			lang1 = lang2
-			lang2 = "english"
-		}
-	} else {
-		r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
-		r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang2, lang1), set2, set1)
-	}
+	*/
+	r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
+	r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang2, lang1), set2, set1)
 	for word, _ := range set1 {
 		words1 = append(words1, &SimpleWord{word, lang1[:3]})
 	}
@@ -157,6 +178,24 @@ func (r *SqlRepo) Search(word string, fromLang string, toLang string) (words []*
 		w := &Word{Word: word, Description: description, Definition: definition, Locality: loc, LangKey: fromLang}
 		r.translate(w, toLang, enId)
 		words = append(words, w)
+
+		statement = "SELECT fields." + fromLang + ", fields_expl." + fromLang + " FROM english " +
+			"INNER JOIN fields on english.field=fields.id " +
+			"INNER JOIN fields_expl ON fields.id=fields_expl.id WHERE english.id=$1"
+		log.Infoln(statement)
+		frows, err := r.handler.Conn().Query(statement, enId)
+		if err != nil {
+			log.Infoln(err.Error())
+			return nil, err
+		}
+		defer frows.Close()
+		var field, desc string
+		for frows.Next() {
+			frows.Scan(&field, &desc)
+			w.Field = field
+			w.FieldDesc = desc
+		}
+
 	}
 	if len(words) == 0 {
 		return nil, fmt.Errorf("Word %s not found in %s table", word, fromLang)

@@ -33,6 +33,10 @@
 	
 	{{if .Results}}
 	<div id="container">
+		{{with $x := index .Results 0}}
+		<h3>{{$x.Word}}</h3>
+		<p> <span title="{{$x.FieldDesc}}">{{$x.Field}}</span></p>
+		{{end}}
 		<table class="translations">
 			<tbody>
 				<tr>
@@ -85,7 +89,7 @@
 		$('#search-text').autoComplete({
           	minChars: 2,
 			source: function(term, response){
-        			$.getJSON('http://localhost:8080/services/autocomplete/' + sel.value, { term: term }, function(data){ 
+        			$.getJSON('/services/autocomplete/' + sel.value, { term: term }, function(data){ 
 					response(data);
 				});
 			},

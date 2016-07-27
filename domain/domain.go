@@ -4,6 +4,7 @@ type Word struct {
 	Word         string
 	LangKey      string
 	Field        string
+	FieldDesc    string
 	Description  string
 	Definition   string
 	Locality     string

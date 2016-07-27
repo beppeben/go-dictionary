@@ -55,12 +55,17 @@ func (e *ExcelReader) GetMatrix(title string) ([][]string, error) {
 	result := make([][]string, 0)
 	for _, row := range sheet.Rows {
 		temp := make([]string, cols)
+		allEmpty := true
 		for j := 0; j < cols && j < len(row.Cells); j++ {
 			value, err := row.Cells[j].String()
 			if err != nil {
 				return nil, err
 			}
 			temp[j] = strings.TrimSpace(value)
+			allEmpty = allEmpty && (temp[j] == "")
+		}
+		if allEmpty {
+			break
 		}
 		result = append(result, temp)
 	}

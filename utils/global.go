@@ -12,6 +12,7 @@ import (
 
 func CopyFileToPath(file multipart.File, dir string, filename string) error {
 	os.MkdirAll(dir, 0755)
+	os.Remove(dir + filename)
 	f, err := os.OpenFile(dir+filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err

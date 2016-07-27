@@ -9,6 +9,7 @@ import (
 )
 
 type MySqlConfig interface {
+	GetUserDB() string
 	GetPassDB() string
 	GetDBName() string
 }
@@ -18,7 +19,7 @@ type MySqlHandler struct {
 }
 
 func NewMySqlHandler(c MySqlConfig) *MySqlHandler {
-	info := fmt.Sprintf("password=%s dbname=%s sslmode=disable", c.GetPassDB(), c.GetDBName())
+	info := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", c.GetUserDB(), c.GetPassDB(), c.GetDBName())
 	conn, err := sql.Open("postgres", info)
 	if err != nil {
 		panic(err.Error())

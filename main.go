@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{DisableColors: true})
 
 	config := utils.NewAppConfig()
