@@ -9,18 +9,18 @@ type SysConfig interface {
 	GetExcelDir() string
 }
 
-type SysUtils struct {
+type Sys struct {
 	config SysConfig
 }
 
-func NewSysUtils(config SysConfig) *SysUtils {
-	return &SysUtils{config}
+func NewSysUtils(config SysConfig) *Sys {
+	return &Sys{config}
 }
 
-func (u *SysUtils) ExtractZipToHttpDir(file multipart.File, length int64) error {
+func (u *Sys) ExtractZipToHttpDir(file multipart.File, length int64) error {
 	return ExtractZipToDir(file, length, u.config.GetHTTPDir())
 }
 
-func (u *SysUtils) CopyFileToExcelDir(file multipart.File) error {
+func (u *Sys) CopyFileToExcelDir(file multipart.File) error {
 	return CopyFileToPath(file, u.config.GetExcelDir(), "mydb.xlsx")
 }

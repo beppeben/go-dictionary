@@ -22,6 +22,15 @@ func CopyFileToPath(file multipart.File, dir string, filename string) error {
 	return err
 }
 
+func Contains(slice []string, term string) bool {
+	for _, s := range slice {
+		if s == term {
+			return true
+		}
+	}
+	return false
+}
+
 func ExtractZipToDir(file multipart.File, length int64, dest string) error {
 	r, err := zip.NewReader(file, length)
 	if err != nil {

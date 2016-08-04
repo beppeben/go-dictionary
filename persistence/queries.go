@@ -58,20 +58,6 @@ func translationsAndForeignSynonymsStmt(lang1 string, lang2 string) string {
 		s = strings.Replace(s, ":lang1", lang1, -1)
 		s = strings.Replace(s, ":lang2", lang2, -1)
 	}
-
-	/*else if lang1 == "english" || lang2 == "english" {
-		lang := lang1
-		if lang1 == "english" {
-			lang = lang2
-		}
-		//s = strings.Replace(translationsAndForeignSynonymsFromEng, ":lang", lang, -1)
-		s = strings.Replace(translationsAndForeignSynonymsFromAnyToEng, ":lang1", lang, -1)
-	} else {
-		s = translationsAndForeignSynonymsFromAny
-		s = strings.Replace(s, ":lang1", lang1, -1)
-		s = strings.Replace(s, ":lang2", lang2, -1)
-	}
-	*/
 	return s
 }
 
@@ -109,6 +95,7 @@ func (r *SqlRepo) GetWordsWithTerm(term string, lang1 string, lang2 string) (wor
 			words = append(words, w)
 		}
 	}
+	sort.Sort(LeastWordsAlphabeticSimple{Words: words, Term: strings.ToLower(term), LangFirst: lang1})
 	return
 }
 
@@ -121,37 +108,16 @@ func (r *SqlRepo) GetWords(lang1 string, lang2 string) (words1 []*SimpleWord, wo
 	}
 	set1 := make(map[string]bool)
 	set2 := make(map[string]bool)
-	/*
-		var swap bool
-		if lang1 == "english" || lang2 == "english" {
-			if lang2 == "english" {
-				lang2 = lang1
-				lang1 = "english"
-				swap = true
-			}
-			r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
-			if swap {
-				temp := set2
-				set2 = set1
-				set1 = temp
-				lang1 = lang2
-				lang2 = "english"
-			}
-		} else {
-			r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
-			r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang2, lang1), set2, set1)
-		}
-	*/
 	r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
 	r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang2, lang1), set2, set1)
 	for word, _ := range set1 {
 		words1 = append(words1, &SimpleWord{word, lang1[:3]})
 	}
-	sort.Sort(Alphabetic(words1))
+	sort.Sort(LeastWordsAlphabeticSimple{Words: words1})
 	for word, _ := range set2 {
 		words2 = append(words2, &SimpleWord{word, lang2[:3]})
 	}
-	sort.Sort(Alphabetic(words2))
+	sort.Sort(LeastWordsAlphabeticSimple{Words: words2})
 	r.allWords[lang1+lang2] = &SimpleWordsPair{First: words1, Second: words2}
 	r.allWords[lang2+lang1] = &SimpleWordsPair{First: words2, Second: words1}
 	return
@@ -178,7 +144,6 @@ func (r *SqlRepo) Search(word string, fromLang string, toLang string) (words []*
 		w := &Word{Word: word, Description: description, Definition: definition, Locality: loc, LangKey: fromLang}
 		r.translate(w, toLang, enId)
 		words = append(words, w)
-
 		statement = "SELECT fields." + fromLang + ", fields_expl." + fromLang + " FROM english " +
 			"INNER JOIN fields on english.field=fields.id " +
 			"INNER JOIN fields_expl ON fields.id=fields_expl.id WHERE english.id=$1"
@@ -195,11 +160,11 @@ func (r *SqlRepo) Search(word string, fromLang string, toLang string) (words []*
 			w.Field = field
 			w.FieldDesc = desc
 		}
-
 	}
 	if len(words) == 0 {
 		return nil, fmt.Errorf("Word %s not found in %s table", word, fromLang)
 	}
+	sort.Sort(LeastWordsAlphabetic{Words: words})
 	return words, nil
 }
 

@@ -10,13 +10,16 @@ import (
 
 	//log "github.com/Sirupsen/logrus"
 	. "github.com/beppeben/go-dictionary/domain"
+	. "github.com/beppeben/go-dictionary/utils"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
 
 type HtmlContent struct {
-	Languages []string
-	Results   []*Word
+	Languages  []string
+	Results    []*Word
+	Fields     []string
+	FieldDescs []string
 }
 
 func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +57,13 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 			}
 		}
 		content.Results = results
+		// list of (non repeating) fields for all the words
+		for _, word := range results {
+			if !Contains(content.Fields, word.Field) {
+				content.Fields = append(content.Fields, word.Field)
+				content.FieldDescs = append(content.FieldDescs, word.FieldDesc)
+			}
+		}
 	}
 
 	t.Execute(w, content)
