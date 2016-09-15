@@ -178,7 +178,7 @@ func (r *SqlRepo) createTableFromMatrix(tx *sql.Tx, title string, matrix [][]str
 	st_insert += buffer.String()
 	st_insert = st_insert[0 : len(st_insert)-1]
 	log.Debug(st_insert)
-
+	log.Debug(vals)
 	_, err = tx.Exec(st_insert, vals...)
 	checkError(err, title)
 }
@@ -253,16 +253,19 @@ func (r *SqlRepo) ResetDB() error {
 		r.createTable(tx, "fields", &ImportOptions{CheckHeaders: true})
 		r.createTable(tx, "fields_expl", &ImportOptions{CheckHeaders: true})
 
-		tx.Exec("ALTER TABLE fields_expl ADD FOREIGN KEY(id) REFERENCES fields(id)")
+		_, err = tx.Exec("ALTER TABLE fields_expl ADD FOREIGN KEY(id) REFERENCES fields(id)")
+		checkError(err, "fields_expl")
 
 		//english is the master table, with synonyms and parent ids
 		//in the other language tables every word has an english equivalent
 		r.createTable(tx, "english", &ImportOptions{})
 
-		tx.Exec("ALTER TABLE english ADD FOREIGN KEY(synonyms) REFERENCES english(id)")
-		tx.Exec("ALTER TABLE english ADD FOREIGN KEY(parent) REFERENCES english(id)")
-		tx.Exec("ALTER TABLE english ADD FOREIGN KEY(field) REFERENCES fields(id)")
-		tx.Exec("ALTER TABLE fields_expl ADD FOREIGN KEY(id) REFERENCES fields(id)")
+		_, err = tx.Exec("ALTER TABLE english ADD FOREIGN KEY(synonyms) REFERENCES english(id)")
+		checkError(err, "english")
+		_, err = tx.Exec("ALTER TABLE english ADD FOREIGN KEY(parent) REFERENCES english(id)")
+		checkError(err, "english")
+		_, err = tx.Exec("ALTER TABLE english ADD FOREIGN KEY(field) REFERENCES fields(id)")
+		checkError(err, "english")
 
 		tx.Exec("CREATE INDEX idx ON english(synonyms)")
 		tx.Exec("CREATE INDEX wrd_eng ON english(word)")
@@ -273,8 +276,9 @@ func (r *SqlRepo) ResetDB() error {
 			}
 			r.createTable(tx, lang, &ImportOptions{AutoId: true})
 
-			tx.Exec("ALTER TABLE " + lang +
+			_, err = tx.Exec("ALTER TABLE " + lang +
 				" ADD FOREIGN KEY(english_id) REFERENCES english(id)")
+			checkError(err, lang)
 
 			tx.Exec("CREATE INDEX wrd_" + lang[:3] + " ON " + lang + "(word)")
 		}
