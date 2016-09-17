@@ -14,12 +14,13 @@ func main() {
 
 	config := utils.NewAppConfig()
 	sysutils := utils.NewSysUtils(config)
+	emailutils := utils.NewEmailUtils(config)
 
 	handler := persistence.NewMySqlHandler(config)
 	reader := excel.NewReader(config.GetExcelDir() + "mydb.xlsx")
 	repo := persistence.NewRepo(handler, reader)
 
-	webhandler := web.NewWebHandler(repo, config, sysutils)
+	webhandler := web.NewWebHandler(repo, config, sysutils, emailutils)
 	webhandler.StartServer()
 
 	select {}

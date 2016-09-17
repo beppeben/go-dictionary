@@ -8,11 +8,11 @@ td:first-child { white-space: nowrap; width: 1%;}
 h1, h2, h3 { color: #4b4b4b; font-family: "Source Sans Pro", sans-serif; font-weight: 300; margin: 0 0 1.2em; }
 h1 { font-size: 4.5em; color: #1f8dd6; margin: 0 0 .4em; }
 h2 { font-size: 2em; color: #636363; }
-h3 { font-size: 1.8em; color: #4b4b4b; margin: 1.8em 0 .8em }
+h3 { font-size: 1.5em; color: #428000; margin: 0; padding:10px; font-weight:bold; }
 h4 { font: bold 1em sans-serif; color: #636363; margin: 4em 0 1em; }
 a { color: #4e99c7; text-decoration: none; }
 
-p, pre { margin: 0 0 1.2em; }
+p, pre { margin: 0 0 0.2em; padding:10px; font-style: italic; font-size: 0.9em;}
 ::selection { color: #fff; background: #328efd; }
 ::-moz-selection { color: #fff; background: #328efd; }
 @media (max-width:480px) {
@@ -55,7 +55,7 @@ input[type="text"] { border-radius: 0 !important; }
 }
 
 .langHeader {
-	font-size: 1em;
+	font-size: 1.1em;
 	text-decoration: underline;
 	font-weight:bold;
 }
@@ -65,3 +65,24 @@ input[type="text"] { border-radius: 0 !important; }
 	margin: 0 auto;
 	width: 70%;
 }
+
+#select {
+	padding: 5px;
+	height: 2.4em;
+}
+
+#notfoundWord { color:#FF0000;font-weight:bold;font-size:20; }
+
+.clearable{
+  background: #fff url(data:image/gif;base64,R0lGODlhBwAHAIAAAP///5KSkiH5BAAAAAAALAAAAAAHAAcAAAIMTICmsGrIXnLxuDMLADs=) no-repeat right -10px center;
+  border: 1px solid #999;
+  padding: 3px 18px 3px 4px; /* Use the same right padding (18) in jQ! */
+  border-radius: 3px;
+  transition: background 0s;
+}
+.clearable.x  { background-position: right 5px center; }
+.clearable.onX{ cursor: pointer; }
+.clearable::-ms-clear {display: none; width:0; height:0;}
+
+
+

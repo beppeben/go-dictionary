@@ -15,7 +15,7 @@
         <h2>The global reference for Jewelry and Horology</h2>
     </div>
     <form onsubmit="$('#search-text').blur();return false;" class="pure-form" style="border-top: 1px solid #eee;border-bottom:1px solid #eee;background:#fafafa;margin:30px 0;padding:20px 10px;text-align:center">
-        <input id="search-text" autofocus type="text" name="q" placeholder="Search word..." style="width:100%;max-width:600px;outline:0">
+        <input id="search-text" class="clearable" autofocus type="search" name="q" placeholder="Search word..." style="width:100%;max-width:600px;outline:0">
 	
 	<select id="select">
 	{{$langs := .Languages}}
@@ -31,66 +31,107 @@
 	</select>
     </form>
 	
-	{{if .Results}}
+	
 	<div id="container">
-		{{with $x := index .Results 0}}
-		<h3>{{$x.Word}}</h3>
-		<p> <span title="{{$x.FieldDesc}}">{{$x.Field}}</span></p>
-		{{end}}
-		<table class="translations">
-			<tbody>
-				<tr>
-					<td colspan="3" title="Principal Translations"></td>
-				</tr>
-				<tr class="langHeader">
-					<td>{{with $x := index .Results 0}}{{toUpper $x.LangKey}}</td><td></td><td>{{with $y:=index $x.Translations 0}}{{toUpper $y.LangKey}}{{end}}{{end}}</td>
-				</tr>
-				{{range $wordindex, $word := .Results}}
-					{{range $tranindex, $tran := $word.Translations}}
-						<tr class="{{oddOrEven $wordindex}}">
-							<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}</strong>{{end}}</td>
-							<td style="width:60%;">{{if $word.Description}}({{$word.Description}}){{end}} {{if $tran.Description}}<span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
-							<td>{{$tran.Word}}</td>
-						</tr>
+		{{if .Results}}
+			{{with $x := index .Results 0}}
+			<h3>{{$x.Word}}</h3>
+			{{end}}
+		
+			{{$fdescs := .FieldDescs}}
+			{{range $fieldindex, $field := .Fields}}
+				<p style="padding-top:2px; padding-bottom:2px"> <span title="{{index $fdescs $fieldindex}}">{{$field}}</span></p>
+			{{end}}
+			<table class="translations">
+				<tbody>
+					<tr>
+						<td colspan="3" title="Principal Translations"></td>
+					</tr>
+					<tr class="langHeader">
+						<td>{{with $x := index .Results 0}}{{toUpper $x.LangKey}}</td><td></td><td>{{with $y:=index $x.Translations 0}}{{toUpper $y.LangKey}}{{end}}{{end}}</td>
+					</tr>
+					{{range $wordindex, $word := .Results}}
+						{{range $tranindex, $tran := $word.Translations}}
+							<tr class="{{oddOrEven $wordindex}}">
+								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}</strong>{{end}}</td>
+								<td style="width:60%;">{{if eq $tranindex 0}}{{if $word.Description}}({{$word.Description}}){{end}}{{end}} {{if $tran.Description}}<span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
+								<td><a style="color:#777" href="/search/{{langsToKey $tran.LangKey $word.LangKey}}/{{$tran.Word}}">{{$tran.Word}}</a></td>
+							</tr>
+						{{end}}
 					{{end}}
-				{{end}}
-			</tbody>
-		</table>
+				</tbody>
+			</table>
+		{{end}}		
 	</div>
-	{{end}}
+
+	<p id="notfoundText" style="margin:0 auto;text-align:center; display:none">Ops... The word <span id="notfoundWord"></span> is not in our <span id="notfoundDictionary">blahblah</span> dictionary. <a id="notfoundSend" style="cursor: pointer;">Let us know!</a></p>
+	<p id="thanks" style="margin:0 auto;text-align:center; display:none">Thanks for the notification! We will review it as soon as possible.</p>
     
     <script src="/js/jquery-1.11.1.min.js"></script>
     <script src="/js/jquery.auto-complete.js"></script>
+	<script src="/js/jquery.clearsearch.js"></script>
     <script>
 	
-	var sel = document.getElementById("select");
+	$('#search-text').val('');
+	
+	jQuery(function($) { 
+	  // /////
+	  // CLEARABLE INPUT
+	  function tog(v){return v?'addClass':'removeClass';} 
+	  $(document).on('input', '.clearable', function(){
+		$(this)[tog(this.value)]('x');
+	  }).on('mousemove', '.x', function( e ){
+		$(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]('onX');   
+	  }).on('touchstart click', '.onX', function( ev ){
+		ev.preventDefault();
+		$(this).removeClass('x onX').val('').change().keyup();
+	  });
+	});
 
+	$("#notfoundSend").click(function() {
+		var url = "/services/notify?word=" + $('#search-text').val() + "&langkey=" + $('#select').val();
+		$.get(url);
+		$("#thanks").show();
+		$('#notfoundText').hide();
+	});
+
+	$('#search-text').keyup( function () {
+    	if (this.value.length <= 2){
+			$('#notfoundText').hide();
+			$("#thanks").hide();
+			$("#container").show();
+		}
+		$('#notfoundWord').text(this.value);
+    });
+
+	$('#select').change( function () {
+    	$('#search-text').val('');
+		$('#search-text').keyup();
+		$('#notfoundDictionary').text($("#select option:selected").text());
+    });
+	
 	var myRe = new RegExp("search/(.+)/", "g");
 	var myArray = myRe.exec(window.location.href);
 
 	if (myArray != null) {
-		sel.value = myArray[1];
+		$('#select').val(myArray[1]);
 	}
 	
-	/*
-	var langkey = document.getElementById("select").value;
-	
-	if (myArray != null) {
-		document.getElementById("select").value = myArray[1];
-		langkey = myArray[1];
-	}
-	
-	function changeLanguages(sel) {
-		langkey = sel.value;
-	}
-	*/
+	$('#notfoundDictionary').text($("#select option:selected").text());
 	
 	$(function() {
 		$('#search-text').autoComplete({
           	minChars: 2,
 			source: function(term, response){
-        			$.getJSON('/services/autocomplete/' + sel.value, { term: term }, function(data){ 
+        			$.getJSON('/services/autocomplete/' + $('#select').val(), { term: term }, function(data){ 
 					response(data);
+					if (data.length > 0){
+						$('#notfoundText').hide();
+					} else{
+						$('#notfoundText').show();
+						$('#container').hide();
+						$("#thanks").hide();
+					}
 				});
 			},
 			renderItem: function (item, search){
@@ -101,7 +142,7 @@
 			onSelect: function(e, term, item){
              	//console.log('Item selected by '+(e.type == 'keydown' ? 'pressing enter or tab' : 'mouse click')+'.');
                	$('#search-text').val(item.data('term'));
-				window.location.replace("/search/" + sel.value + "/" + item.data('term'));
+				window.location.replace("/search/" + $('#select').val() + "/" + item.data('term'));
           	},
 			cache: false
      	});

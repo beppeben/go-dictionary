@@ -52,3 +52,23 @@ func (val *AppConfig) GetAdminPass() string {
 func (val *AppConfig) GetServerPort() string {
 	return val.v.GetString("SERVER_PORT")
 }
+
+func (val *AppConfig) GetServiceEmail() string {
+	return val.v.GetString("EMAIL")
+}
+
+func (val *AppConfig) GetEmailPass() string {
+	return val.v.GetString("EMAIL_PASS")
+}
+
+func (val *AppConfig) GetSMTP() string {
+	return val.v.GetString("SMTP")
+}
+
+func (val *AppConfig) GetSMTPPort() string {
+	return val.v.GetString("SMTP_PORT")
+}
+
+func (val *AppConfig) GetAdminEmail() string {
+	return val.v.GetString("ADMIN_EMAIL")
+}

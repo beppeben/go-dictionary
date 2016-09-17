@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strings"
 
-	//log "github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	. "github.com/beppeben/go-dictionary/domain"
-	. "github.com/beppeben/go-dictionary/utils"
+	"github.com/beppeben/go-dictionary/utils"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
@@ -59,7 +59,7 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 		content.Results = results
 		// list of (non repeating) fields for all the words
 		for _, word := range results {
-			if !Contains(content.Fields, word.Field) {
+			if !utils.Contains(content.Fields, word.Field) {
 				content.Fields = append(content.Fields, word.Field)
 				content.FieldDescs = append(content.FieldDescs, word.FieldDesc)
 			}
@@ -68,25 +68,6 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 
 	t.Execute(w, content)
 }
-
-/*
-func (handler WebserviceHandler) Search(w http.ResponseWriter, r *http.Request) {
-	fromLang, toLang := handler.getLanguagesFromRequest(r)
-	word := r.FormValue("word")
-	if word == "" {
-		panic("Empty word")
-	}
-	words, err := handler.repo.Search(word, fromLang, toLang)
-	if err != nil {
-		panic(err.Error())
-	}
-	for _, wd := range words {
-		for _, tr := range wd.Translations {
-			fmt.Fprintln(w, tr.Word)
-		}
-	}
-}
-*/
 
 func (handler WebserviceHandler) Autocomplete(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
@@ -98,6 +79,21 @@ func (handler WebserviceHandler) Autocomplete(w http.ResponseWriter, r *http.Req
 	}
 	enc := json.NewEncoder(w)
 	enc.Encode(result)
+}
+
+func (handler WebserviceHandler) Notify(w http.ResponseWriter, r *http.Request) {
+	fromLang, toLang := handler.getLanguagesFromRequest(r.FormValue("langkey"))
+	term := r.FormValue("word")
+	if term == "" {
+		panic("No word inserted")
+	}
+	message := "Word: " + term + "\nDictionary: " + fromLang + "-" + toLang
+	go func() {
+		err := handler.eutils.SendEmailToAdmin("Suggestion received", message)
+		if err != nil {
+			log.Info(err.Error())
+		}
+	}()
 }
 
 func (handler WebserviceHandler) getLanguagesFromRequest(key string) (string, string) {

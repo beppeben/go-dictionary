@@ -31,20 +31,26 @@ type SysUtils interface {
 	CopyFileToExcelDir(file multipart.File) error
 }
 
+type EmailUtils interface {
+	SendEmail(email, title, text string) error
+	SendEmailToAdmin(subject, body string) error
+}
+
 type WebserviceHandler struct {
 	repo    Repository
 	frouter *http.ServeMux
 	mrouter *router
 	config  ServerConfig
 	sutils  SysUtils
+	eutils  EmailUtils
 }
 
 type router struct {
 	*httprouter.Router
 }
 
-func NewWebHandler(repo Repository, c ServerConfig, s SysUtils) *WebserviceHandler {
-	return &WebserviceHandler{repo: repo, config: c, sutils: s}
+func NewWebHandler(repo Repository, c ServerConfig, s SysUtils, e EmailUtils) *WebserviceHandler {
+	return &WebserviceHandler{repo: repo, config: c, sutils: s, eutils: e}
 }
 
 func (h WebserviceHandler) StartServer() {
@@ -56,6 +62,7 @@ func (h WebserviceHandler) StartServer() {
 	h.mrouter.Get("/services/autocomplete/:langkey", commonHandlers.ThenFunc(h.Autocomplete))
 	h.mrouter.Post("/services/deployFront", commonHandlers.Append(h.BasicAuth).ThenFunc(h.DeployFront))
 	h.mrouter.Post("/services/deployDb", commonHandlers.Append(h.BasicAuth).ThenFunc(h.DeployDb))
+	h.mrouter.Get("/services/notify", commonHandlers.ThenFunc(h.Notify))
 	h.mrouter.Get("/search/:langkey/:term", commonHandlers.ThenFunc(h.IndexHTML))
 	h.mrouter.Get("/", commonHandlers.ThenFunc(h.IndexHTML))
 
