@@ -30,7 +30,7 @@ const (
 	allWords = "SELECT word, word from :lang;"
 
 	searchWithSynonymsBase = "WITH RECURSIVE toeng(syn, enid) AS" +
-		"(SELECT synonyms, id  FROM english WHERE id=$1 " +
+		"(SELECT synonyms, id FROM english WHERE id=$1 " +
 		"UNION " +
 		"SELECT synonyms, id " +
 		"FROM english JOIN toeng ON toeng.syn=english.id OR toeng.enid=english.synonyms) "
@@ -142,12 +142,23 @@ func (r *SqlRepo) Search(word string, fromLang string, toLang string) (words []*
 	for rows.Next() {
 		rows.Scan(&enId, &description, &definition, &loc)
 		w := &Word{Word: word, Description: description, Definition: definition, Locality: loc, LangKey: fromLang}
-		r.translate(w, toLang, enId)
+		translations, err := r.translate(w, toLang, enId)
+		if err != nil {
+			log.Infoln(err.Error())
+			return nil, err
+		}
+		w.Translations = translations
+		synonyms, err := r.translate(w, fromLang, enId)
+		if err != nil {
+			log.Infoln(err.Error())
+			return nil, err
+		}
+		w.Synonyms = synonyms
 		words = append(words, w)
 		statement = "SELECT fields." + fromLang + ", fields_expl." + fromLang + " FROM english " +
 			"INNER JOIN fields on english.field=fields.id " +
 			"INNER JOIN fields_expl ON fields.id=fields_expl.id WHERE english.id=$1"
-		log.Infoln(statement)
+		log.Debug(statement)
 		frows, err := r.handler.Conn().Query(statement, enId)
 		if err != nil {
 			log.Infoln(err.Error())
@@ -168,7 +179,7 @@ func (r *SqlRepo) Search(word string, fromLang string, toLang string) (words []*
 	return words, nil
 }
 
-func (r *SqlRepo) translate(word *Word, toLang string, enId int64) error {
+func (r *SqlRepo) translate(word *Word, toLang string, enId int64) (words []*Word, err error) {
 	var statement string
 	if toLang == "english" {
 		statement = searchWithSynonymsToEng
@@ -177,16 +188,16 @@ func (r *SqlRepo) translate(word *Word, toLang string, enId int64) error {
 	}
 	rows, err := r.handler.Conn().Query(statement, enId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer rows.Close()
-	words := make([]*Word, 0)
 	var wrd, description, definition, loc string
 	for rows.Next() {
 		rows.Scan(&wrd, &description, &definition, &loc)
-		w := &Word{Word: wrd, Description: description, Definition: definition, Locality: loc, LangKey: toLang}
-		words = append(words, w)
+		if word.Word != wrd || word.LangKey != toLang {
+			w := &Word{Word: wrd, Description: description, Definition: definition, Locality: loc, LangKey: toLang}
+			words = append(words, w)
+		}
 	}
-	word.Translations = words
-	return nil
+	return words, nil
 }

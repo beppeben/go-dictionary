@@ -22,26 +22,30 @@ type HtmlContent struct {
 	FieldDescs []string
 }
 
+var htmlHelpers = template.FuncMap{
+	"langsToKey": func(l1, l2 string) string {
+		return strings.ToLower(l1[:3]) + strings.ToLower(l2[:3])
+	},
+	"oddOrEven": func(num int) string {
+		if math.Mod(float64(num), 2) != 0 {
+			return "odd"
+		} else {
+			return "even"
+		}
+	},
+	"toUpper": func(text string) string {
+		return strings.ToUpper(text[0:1]) + text[1:]
+	},
+	"dec": func(num int) int {
+		return num - 1
+	},
+}
+
 func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	key := ps.ByName("langkey")
 	term := ps.ByName("term")
-	funcMap := template.FuncMap{
-		"langsToKey": func(l1, l2 string) string {
-			return strings.ToLower(l1[:3]) + strings.ToLower(l2[:3])
-		},
-		"oddOrEven": func(num int) string {
-			if math.Mod(float64(num), 2) != 0 {
-				return "odd"
-			} else {
-				return "even"
-			}
-		},
-		"toUpper": func(text string) string {
-			return strings.ToUpper(text[0:1]) + text[1:]
-		},
-	}
-	t := template.Must(template.New("index.html").Funcs(funcMap).ParseFiles(handler.config.GetHTTPDir() + "index.html"))
+	t := template.Must(template.New("index.html").Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + "index.html"))
 	languages := handler.repo.GetLanguages()
 	content := &HtmlContent{Languages: languages}
 	if key != "" && term != "" {
@@ -57,7 +61,7 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 			}
 		}
 		content.Results = results
-		// list of (non repeating) fields for all the words
+		//list of (non repeating) fields for all the words
 		for _, word := range results {
 			if !utils.Contains(content.Fields, word.Field) {
 				content.Fields = append(content.Fields, word.Field)
