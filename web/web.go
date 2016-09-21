@@ -101,7 +101,7 @@ func wrapHandler(h http.Handler) httprouter.Handle {
 
 func (handler WebserviceHandler) FrontHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/css") || strings.HasPrefix(r.URL.Path, "/js") ||
-		strings.HasPrefix(r.URL.Path, "/deploy.html") {
+		strings.HasPrefix(r.URL.Path, "/deploy.html") || strings.HasPrefix(r.URL.Path, "/about.html") {
 		handler.frouter.ServeHTTP(w, r)
 	} else {
 		handler.mrouter.ServeHTTP(w, r)
