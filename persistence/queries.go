@@ -123,6 +123,64 @@ func (r *SqlRepo) GetWords(lang1 string, lang2 string) (words1 []*SimpleWord, wo
 	return
 }
 
+func (r *SqlRepo) Search(word, fromLang, toLang, baseLang string) (words []*Word, err error) {
+	var statement string
+	if fromLang == "english" {
+		statement = "SELECT id, description, definition, loc FROM english WHERE WORD=$1"
+	} else {
+		statement = "SELECT english_id, description, definition, loc FROM :lang WHERE WORD=$1"
+		statement = strings.Replace(statement, ":lang", fromLang, -1)
+	}
+	rows, err := r.handler.Conn().Query(statement, word)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	words = make([]*Word, 0)
+	var enId int64
+	var description, definition, loc string
+	for rows.Next() {
+		rows.Scan(&enId, &description, &definition, &loc)
+		w := &Word{Word: word, Description: description, Definition: definition,
+			Locality: loc, LangKey: r.langMatrix[fromLang[:3]+baseLang[:3]]}
+		translations, err := r.translate(w, toLang, baseLang, enId)
+		if err != nil {
+			log.Infoln(err.Error())
+			return nil, err
+		}
+		w.Translations = translations
+		synonyms, err := r.translate(w, fromLang, baseLang, enId)
+		if err != nil {
+			log.Infoln(err.Error())
+			return nil, err
+		}
+		w.Synonyms = synonyms
+		words = append(words, w)
+		statement = "SELECT fields." + baseLang + ", fields_expl." + baseLang + " FROM english " +
+			"INNER JOIN fields on english.field=fields.id " +
+			"INNER JOIN fields_expl ON fields.id=fields_expl.id WHERE english.id=$1"
+		log.Debug(statement)
+		frows, err := r.handler.Conn().Query(statement, enId)
+		if err != nil {
+			log.Infoln(err.Error())
+			return nil, err
+		}
+		defer frows.Close()
+		var field, desc string
+		for frows.Next() {
+			frows.Scan(&field, &desc)
+			w.Field = field
+			w.FieldDesc = desc
+		}
+	}
+	if len(words) == 0 {
+		return nil, fmt.Errorf("Word %s not found in %s table", word, fromLang)
+	}
+	sort.Sort(LeastWordsAlphabetic{Words: words})
+	return words, nil
+}
+
+/*
 func (r *SqlRepo) Search(word string, fromLang string, toLang string) (words []*Word, err error) {
 	var statement string
 	if fromLang == "english" {
@@ -178,7 +236,33 @@ func (r *SqlRepo) Search(word string, fromLang string, toLang string) (words []*
 	sort.Sort(LeastWordsAlphabetic{Words: words})
 	return words, nil
 }
+*/
 
+func (r *SqlRepo) translate(word *Word, toLang string, baseLang string, enId int64) (words []*Word, err error) {
+	var statement string
+	if toLang == "english" {
+		statement = searchWithSynonymsToEng
+	} else {
+		statement = strings.Replace(searchWithSynonymsToAny, ":lang", toLang, -1)
+	}
+	rows, err := r.handler.Conn().Query(statement, enId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var wrd, description, definition, loc string
+	for rows.Next() {
+		rows.Scan(&wrd, &description, &definition, &loc)
+		if word.Word != wrd || word.LangKey != toLang {
+			w := &Word{Word: wrd, Description: description, Definition: definition,
+				Locality: loc, LangKey: r.langMatrix[toLang[:3]+baseLang[:3]]}
+			words = append(words, w)
+		}
+	}
+	return words, nil
+}
+
+/*
 func (r *SqlRepo) translate(word *Word, toLang string, enId int64) (words []*Word, err error) {
 	var statement string
 	if toLang == "english" {
@@ -201,3 +285,4 @@ func (r *SqlRepo) translate(word *Word, toLang string, enId int64) (words []*Wor
 	}
 	return words, nil
 }
+*/

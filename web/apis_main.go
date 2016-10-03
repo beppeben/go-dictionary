@@ -16,7 +16,7 @@ import (
 )
 
 type HtmlContent struct {
-	Languages  []string
+	Languages  []*Language
 	Results    []*Word
 	Fields     []string
 	FieldDescs []string
@@ -42,22 +42,30 @@ var htmlHelpers = template.FuncMap{
 }
 
 func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Request) {
+	baseLang := handler.getBaseLanguage(r.FormValue("lang"))
 	ps := context.Get(r, "params").(httprouter.Params)
 	key := ps.ByName("langkey")
 	term := ps.ByName("term")
+	htmlHelpers["getString"] = func(key string) string {
+		return handler.repo.GetWebTerm(baseLang, key)
+	}
 	t := template.Must(template.New("index.html").Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + "index.html"))
-	languages := handler.repo.GetLanguages()
-	content := &HtmlContent{Languages: languages}
+	langs := handler.repo.GetLanguages(baseLang)
+	content := &HtmlContent{Languages: langs}
 	if key != "" && term != "" {
 		fromLang, toLang := handler.getLanguagesFromRequest(ps.ByName("langkey"))
-		results, err := handler.repo.Search(term, fromLang, toLang)
+		results, err := handler.repo.Search(term, fromLang, toLang, baseLang)
 		if err != nil {
 			//trying the other way around
-			results, err = handler.repo.Search(term, toLang, fromLang)
+			results, err = handler.repo.Search(term, toLang, fromLang, baseLang)
 			if err != nil {
 				panic(fmt.Sprintf("Word %s does not exist in %s/%s dictionary", term, fromLang, toLang))
 			} else {
-				http.Redirect(w, r, "/search/"+toLang[0:3]+fromLang[0:3]+"/"+term, http.StatusFound)
+				url := "/search/" + toLang[:3] + fromLang[:3] + "/" + term
+				if baseLang != "" {
+					url += "?lang=" + baseLang[:3]
+				}
+				http.Redirect(w, r, url, http.StatusFound)
 			}
 		}
 		content.Results = results
@@ -110,4 +118,15 @@ func (handler WebserviceHandler) getLanguagesFromRequest(key string) (string, st
 		panic("Invalid language keys")
 	}
 	return fromLang, toLang
+}
+
+func (handler WebserviceHandler) getBaseLanguage(key string) string {
+	baseLang := "english"
+	if key != "" {
+		baseLang = handler.repo.GetLangFromKey(key)
+		if baseLang == "" {
+			panic("Invalid language")
+		}
+	}
+	return baseLang
 }

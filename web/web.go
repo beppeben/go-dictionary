@@ -15,9 +15,10 @@ import (
 type Repository interface {
 	ResetDB() error
 	GetLangFromKey(key string) string
-	Search(word string, fromLang string, toLang string) (words []*Word, err error)
+	Search(word, fromLang, toLang, baseLang string) (words []*Word, err error)
 	GetWordsWithTerm(term string, lang1 string, lang2 string) (words []*SimpleWord, err error)
-	GetLanguages() []string
+	GetLanguages(base string) []*Language
+	GetWebTerm(lang, key string) string
 }
 
 type ServerConfig interface {
@@ -64,6 +65,8 @@ func (h WebserviceHandler) StartServer() {
 	h.mrouter.Post("/services/deployDb", commonHandlers.Append(h.BasicAuth).ThenFunc(h.DeployDb))
 	h.mrouter.Get("/services/notify", commonHandlers.ThenFunc(h.Notify))
 	h.mrouter.Get("/search/:langkey/:term", commonHandlers.ThenFunc(h.IndexHTML))
+	h.mrouter.Get("/langs/:langkey", commonHandlers.ThenFunc(h.IndexHTML))
+	h.mrouter.Get("/index.html", commonHandlers.ThenFunc(h.IndexHTML))
 	h.mrouter.Get("/", commonHandlers.ThenFunc(h.IndexHTML))
 
 	var err error

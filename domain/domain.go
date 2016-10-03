@@ -17,6 +17,11 @@ type Word struct {
 	Translations []*Word
 }
 
+type Language struct {
+	Language string
+	Tag      string
+}
+
 type SimpleWord struct {
 	Word    string `json:"w"`
 	LangTag string `json:"t"`

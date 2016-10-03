@@ -23,8 +23,14 @@ type SqlRepo struct {
 	handler   DbHandler
 	reader    *excel.ExcelReader
 	languages []string
-	langMap   map[string]string
-	allWords  map[string]*SimpleWordsPair
+	//from key to english language name
+	langMap map[string]string
+	//allWords["lang1" + "lang2"] contains all the words in that specific dictionary
+	allWords map[string]*SimpleWordsPair
+	//langMatrix["lang1" + "lang2"] contains the translation of lang1 into lang2
+	langMatrix map[string]string
+	//webStrings["lang" + "key"] contains web entry "key" in language "lang"
+	webStrings map[string]string
 }
 
 type ImportOptions struct {
@@ -36,15 +42,16 @@ type ImportOptions struct {
 func NewRepo(h DbHandler, r *excel.ExcelReader) *SqlRepo {
 	repo := &SqlRepo{handler: h, reader: r}
 	repo.refreshLanguages()
-	repo.refreshLanguageMap()
+	repo.refreshLanguageMaps()
 	repo.refreshWordsCache()
 	return repo
 }
 
-func (r *SqlRepo) GetLanguages() []string {
-	result := make([]string, len(r.languages))
+func (r *SqlRepo) GetLanguages(base string) []*Language {
+	result := make([]*Language, len(r.languages))
 	for i, _ := range r.languages {
-		result[i] = strings.Title(r.languages[i])
+		lang := r.langMatrix[r.languages[i][:3]+base[:3]]
+		result[i] = &Language{Language: strings.Title(lang), Tag: r.languages[i][:3]}
 	}
 	return result
 }
@@ -62,7 +69,7 @@ func getDbType(sample string, title string) string {
 	if title == "english_id" {
 		return "INT NOT NULL"
 	}
-	if title == "description" || title == "definition" {
+	if title == "description" || title == "definition" || title == "about" {
 		return "VARCHAR(5000)"
 	}
 	return "VARCHAR(255)"
@@ -87,12 +94,70 @@ func (r *SqlRepo) refreshWordsCache() {
 	}
 }
 
-func (r *SqlRepo) refreshLanguageMap() {
-	log.Info("Refreshing language map")
-	r.langMap = make(map[string]string)
-	for _, lang := range r.languages {
-		r.langMap[lang[:3]] = lang
+func (r *SqlRepo) GetWebTerm(lang, key string) string {
+	return r.webStrings[lang[:3]+key]
+}
+
+func (r *SqlRepo) saveWebTerms(lang string) {
+	rows, err := r.handler.Conn().Query("SELECT * FROM web WHERE lower(id)=$1", lang)
+	if err != nil {
+		panic(err.Error())
 	}
+	defer rows.Close()
+	columns, err := rows.Columns()
+	if err != nil {
+		panic(err.Error())
+	}
+	terms := make([]string, len(columns))
+	pointers := make([]interface{}, len(columns))
+	for i, _ := range columns {
+		pointers[i] = &terms[i]
+	}
+	if rows.Next() {
+		err = rows.Scan(pointers...)
+		if err != nil {
+			panic(err.Error())
+		}
+		for i, _ := range columns {
+			r.webStrings[lang[:3]+columns[i]] = terms[i]
+		}
+	}
+}
+
+func (r *SqlRepo) fillMissingWebTerms() {
+	for key := range r.webStrings {
+		if key[:3] == "eng" {
+			continue
+		}
+		if r.webStrings[key] == "" {
+			r.webStrings[key] = r.webStrings["eng"+key[3:]]
+		}
+	}
+}
+
+func (r *SqlRepo) refreshLanguageMaps() {
+	log.Info("Refreshing language maps")
+	r.langMap = make(map[string]string)
+	r.langMatrix = make(map[string]string)
+	r.webStrings = make(map[string]string)
+
+	for _, lang := range r.languages {
+		r.saveWebTerms(lang)
+		r.langMap[lang[:3]] = lang
+		for _, other := range r.languages {
+			rows, err := r.handler.Conn().Query("SELECT "+lang+" FROM languages WHERE lower(id)=$1", other)
+			if err != nil {
+				panic(err.Error())
+			}
+			defer rows.Close()
+			var tran string
+			rows.Next()
+			rows.Scan(&tran)
+			r.langMatrix[lang[:3]+other[:3]] = strings.ToLower(tran)
+		}
+	}
+
+	r.fillMissingWebTerms()
 }
 
 func (r *SqlRepo) GetLangFromKey(key string) string {
@@ -233,16 +298,17 @@ func (r *SqlRepo) ResetDB() error {
 		log.Debugf("%d languages currently stored", len(r.languages))
 		if len(r.languages) > 0 {
 			log.Info("Removing all tables")
-			tx.Exec("DROP TABLE fields_expl")
-			tx.Exec("DROP TABLE languages")
+			tx.Exec("DROP TABLE IF EXISTS web")
+			tx.Exec("DROP TABLE IF EXISTS fields_expl")
+			tx.Exec("DROP TABLE IF EXISTS languages")
 			for _, lang := range r.languages {
 				if lang == "english" {
 					continue
 				}
-				tx.Exec("DROP TABLE " + lang)
+				tx.Exec("DROP TABLE IF EXISTS " + lang)
 			}
-			tx.Exec("DROP TABLE english")
-			tx.Exec("DROP TABLE fields")
+			tx.Exec("DROP TABLE IF EXISTS english")
+			tx.Exec("DROP TABLE IF EXISTS fields")
 		}
 		var err error
 		if err = r.reader.RefreshFile(); err != nil {
@@ -252,9 +318,12 @@ func (r *SqlRepo) ResetDB() error {
 		r.refreshLanguagesFromTx(tx)
 		r.createTable(tx, "fields", &ImportOptions{CheckHeaders: true})
 		r.createTable(tx, "fields_expl", &ImportOptions{CheckHeaders: true})
-
 		_, err = tx.Exec("ALTER TABLE fields_expl ADD FOREIGN KEY(id) REFERENCES fields(id)")
 		checkError(err, "fields_expl")
+
+		r.createTable(tx, "web", &ImportOptions{})
+		_, err = tx.Exec("ALTER TABLE web ADD FOREIGN KEY(id) REFERENCES languages(id)")
+		checkError(err, "web")
 
 		//english is the master table, with synonyms and parent ids
 		//in the other language tables every word has an english equivalent
@@ -286,7 +355,7 @@ func (r *SqlRepo) ResetDB() error {
 	})
 	if err == nil {
 		r.refreshLanguages()
-		r.refreshLanguageMap()
+		r.refreshLanguageMaps()
 		r.refreshWordsCache()
 	}
 	return err
