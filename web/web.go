@@ -65,8 +65,8 @@ func (h WebserviceHandler) StartServer() {
 	h.mrouter.Post("/services/deployDb", commonHandlers.Append(h.BasicAuth).ThenFunc(h.DeployDb))
 	h.mrouter.Get("/services/notify", commonHandlers.ThenFunc(h.Notify))
 	h.mrouter.Get("/search/:langkey/:term", commonHandlers.ThenFunc(h.IndexHTML))
-	h.mrouter.Get("/langs/:langkey", commonHandlers.ThenFunc(h.IndexHTML))
 	h.mrouter.Get("/index.html", commonHandlers.ThenFunc(h.IndexHTML))
+	h.mrouter.Get("/about.html", commonHandlers.ThenFunc(h.AboutHTML))
 	h.mrouter.Get("/", commonHandlers.ThenFunc(h.IndexHTML))
 
 	var err error
@@ -104,7 +104,7 @@ func wrapHandler(h http.Handler) httprouter.Handle {
 
 func (handler WebserviceHandler) FrontHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/css") || strings.HasPrefix(r.URL.Path, "/js") ||
-		strings.HasPrefix(r.URL.Path, "/deploy.html") || strings.HasPrefix(r.URL.Path, "/about.html") {
+		strings.HasPrefix(r.URL.Path, "/deploy.html") {
 		handler.frouter.ServeHTTP(w, r)
 	} else {
 		handler.mrouter.ServeHTTP(w, r)

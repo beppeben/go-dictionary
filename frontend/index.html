@@ -2,28 +2,32 @@
 <head>
     <meta charset="utf-8">
     <title>AZ Jewels</title>
-    <meta name="description" content="The reference for jewelry">
+	<meta name="keywords" content="jewelry, horology, luxury goods, dictionary, translations">
     <!--<link rel="shortcut icon" href="https://pixabay.com/favicon.ico">-->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300">
     <link rel="stylesheet" href="https://cdn.rawgit.com/yahoo/pure-release/v0.6.0/pure-min.css">
     <link rel="stylesheet" href="/css/mystyle.css">
+	<script src="/js/myFuncs.js"></script>
+	<script>redirectLang();</script>
 </head>
 <body>
-    <div style="max-width:900px;padding:0 10px;margin:40px auto;text-align:center">
-        <a href="/"><h1>AZ Jewels</h1></a>
-        <h2>The global reference for Jewelry and Horology</h2>
+	<div class="page-wrap">
+
+    <div style="max-width:900px;padding-top:40px;margin:0 auto;text-align:center">
+        <span class="title"><a href="/">{{getString "title"}}</a></span>
+        <h2 style="margin-top:20px">{{getString "header"}}</h2>
     </div>
     <form onsubmit="$('#search-text').blur();return false;" class="pure-form" style="border-top: 1px solid #eee;border-bottom:1px solid #eee;background:#fafafa;margin:30px 0;padding:20px 10px;text-align:center">
-        <input id="search-text" class="clearable" autofocus type="search" name="q" placeholder="Search word..." style="width:100%;max-width:600px;outline:0">
+        <input id="search-text" class="clearable" autofocus type="search" name="q" placeholder="{{getString "search_word"}}..." style="width:100%;max-width:600px;outline:0">
 	
 	<select id="select">
 	{{$langs := .Languages}}
 	{{range $lang1 := $langs}}
-	  <optgroup label="{{$lang1}}">
+	  <optgroup label="{{$lang1.Language}}">
 		{{range $lang2 := $langs}}
-			{{if ne $lang1 $lang2}}
-			<option value="{{langsToKey $lang1 $lang2}}">{{$lang1}}-{{$lang2}}</option>
+			{{if ne $lang1.Tag $lang2.Tag}}
+			<option value="{{$lang1.Tag}}{{$lang2.Tag}}">{{$lang1.Language}}-{{$lang2.Language}}</option>
 			{{end}}
 		{{end}}	    
 	  </optgroup>
@@ -58,98 +62,47 @@
 								<td><a style="color:#777" href="/search/{{langsToKey $tran.LangKey $word.LangKey}}/{{$tran.Word}}">{{$tran.Word}}</a></td>
 							</tr>
 						{{end}}
+						{{if $word.Synonyms}}
+						{{$maxsyn := len $word.Synonyms | dec}}
+						{{$firsttrans := index $word.Translations 0}}
+						<tr class="{{oddOrEven $wordindex}}">
+								<td>Synonyms:</td>
+								<td style="width:60%;">
+								{{range $synindex, $syn := $word.Synonyms}}									
+									<a style="color:#777" href="/search/{{langsToKey $syn.LangKey $firsttrans.LangKey}}/{{$syn.Word}}">{{$syn.Word}}</a>{{if ne $synindex $maxsyn}},{{end}}
+								{{end}}
+								</td>
+								<td></td>
+						</tr>
+						{{end}}
 					{{end}}
 				</tbody>
 			</table>
 		{{end}}		
 	</div>
 
-	<p id="notfoundText" style="margin:0 auto;text-align:center; display:none">Ops... The word <span id="notfoundWord"></span> is not in our <span id="notfoundDictionary">blahblah</span> dictionary. <a id="notfoundSend" style="cursor: pointer;">Let us know!</a></p>
-	<p id="thanks" style="margin:0 auto;text-align:center; display:none">Thanks for the notification! We will review it as soon as possible.</p>
+	<p id="notfoundText" style="margin:0 auto;text-align:center; display:none">{{getString "ops_word"}} <span id="notfoundWord"></span> {{getString "not_in_dictionary"}} (<span id="notfoundDictionary">blahblah</span>). <a id="notfoundSend" style="cursor: pointer;">{{getString "let_us_know"}}</a></p>
+	<p id="thanks" style="margin:0 auto;text-align:center; display:none">{{getString "thanks_notification"}}</p>
     
+
+	</div>
+
+	<footer class="site-footer">
+		<div style="padding-top:40px">
+			<a id="about" href="#"><span style="font-style: italic;font-size: 0.9em;margin-right:20px">{{getString "about_us"}}</span></a>
+			<select id="mainlang" style="font-size: 0.9em">
+				{{range $lang := .Languages}}
+					<option value="{{$lang.Tag}}" >{{$lang.Language}}</option>  
+				{{end}}
+			</select>
+        </div>
+		
+
+	</footer>
+	
     <script src="/js/jquery-1.11.1.min.js"></script>
     <script src="/js/jquery.auto-complete.js"></script>
-	<script src="/js/jquery.clearsearch.js"></script>
-    <script>
-	
-	$('#search-text').val('');
-	
-	jQuery(function($) { 
-	  // /////
-	  // CLEARABLE INPUT
-	  function tog(v){return v?'addClass':'removeClass';} 
-	  $(document).on('input', '.clearable', function(){
-		$(this)[tog(this.value)]('x');
-	  }).on('mousemove', '.x', function( e ){
-		$(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]('onX');   
-	  }).on('touchstart click', '.onX', function( ev ){
-		ev.preventDefault();
-		$(this).removeClass('x onX').val('').change().keyup();
-	  });
-	});
+	<script src="/js/mainLogic.js"></script>
 
-	$("#notfoundSend").click(function() {
-		var url = "/services/notify?word=" + $('#search-text').val() + "&langkey=" + $('#select').val();
-		$.get(url);
-		$("#thanks").show();
-		$('#notfoundText').hide();
-	});
-
-	$('#search-text').keyup( function () {
-    	if (this.value.length <= 2){
-			$('#notfoundText').hide();
-			$("#thanks").hide();
-			$("#container").show();
-		}
-		$('#notfoundWord').text(this.value);
-    });
-
-	$('#select').change( function () {
-    	$('#search-text').val('');
-		$('#search-text').keyup();
-		$('#notfoundDictionary').text($("#select option:selected").text());
-    });
-	
-	var myRe = new RegExp("search/(.+)/", "g");
-	var myArray = myRe.exec(window.location.href);
-
-	if (myArray != null) {
-		$('#select').val(myArray[1]);
-	}
-	
-	$('#notfoundDictionary').text($("#select option:selected").text());
-	
-	$(function() {
-		$('#search-text').autoComplete({
-          	minChars: 2,
-			source: function(term, response){
-        			$.getJSON('/services/autocomplete/' + $('#select').val(), { term: term }, function(data){ 
-					response(data);
-					if (data.length > 0){
-						$('#notfoundText').hide();
-					} else{
-						$('#notfoundText').show();
-						$('#container').hide();
-						$("#thanks").hide();
-					}
-				});
-			},
-			renderItem: function (item, search){
-           		search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-               	var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
-               	return '<div class="autocomplete-suggestion" data-term="'+item.w+'" data-val="'+search+'">'+ '(' + item.t + ') '+item.w.replace(re, "<b>$1</b>")+'</div>';
-            },
-			onSelect: function(e, term, item){
-             	//console.log('Item selected by '+(e.type == 'keydown' ? 'pressing enter or tab' : 'mouse click')+'.');
-               	$('#search-text').val(item.data('term'));
-				window.location.replace("/search/" + $('#select').val() + "/" + item.data('term'));
-          	},
-			cache: false
-     	});
-	})
-
-	 
-            
-    </script>
 </body>
 </html>

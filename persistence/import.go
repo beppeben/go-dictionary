@@ -69,7 +69,7 @@ func getDbType(sample string, title string) string {
 	if title == "english_id" {
 		return "INT NOT NULL"
 	}
-	if title == "description" || title == "definition" || title == "about" {
+	if title == "description" || title == "definition" || title == "about_html" {
 		return "VARCHAR(5000)"
 	}
 	return "VARCHAR(255)"
@@ -101,7 +101,8 @@ func (r *SqlRepo) GetWebTerm(lang, key string) string {
 func (r *SqlRepo) saveWebTerms(lang string) {
 	rows, err := r.handler.Conn().Query("SELECT * FROM web WHERE lower(id)=$1", lang)
 	if err != nil {
-		panic(err.Error())
+		return
+		//panic(err.Error())
 	}
 	defer rows.Close()
 	columns, err := rows.Columns()

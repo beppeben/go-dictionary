@@ -81,6 +81,19 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 	t.Execute(w, content)
 }
 
+func (handler WebserviceHandler) AboutHTML(w http.ResponseWriter, r *http.Request) {
+	baseLang := handler.getBaseLanguage(r.FormValue("lang"))
+	htmlHelpers["getString"] = func(key string) string {
+		return handler.repo.GetWebTerm(baseLang, key)
+	}
+	htmlHelpers["getHtml"] = func(key string) template.HTML {
+		return template.HTML(handler.repo.GetWebTerm(baseLang, key))
+	}
+	t := template.Must(template.New("about.html").Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + "about.html"))
+
+	t.Execute(w, "")
+}
+
 func (handler WebserviceHandler) Autocomplete(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	fromLang, toLang := handler.getLanguagesFromRequest(ps.ByName("langkey"))
