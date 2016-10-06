@@ -5,8 +5,9 @@ import (
 )
 
 type Word struct {
+	//LangKey      string
 	Word         string
-	LangKey      string
+	Lang         *Language
 	Field        string
 	FieldDesc    string
 	Description  string

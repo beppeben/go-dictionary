@@ -52,24 +52,24 @@
 						<td colspan="3" title="Principal Translations"></td>
 					</tr>
 					<tr class="langHeader">
-						<td>{{with $x := index .Results 0}}{{toUpper $x.LangKey}}</td><td></td><td>{{with $y:=index $x.Translations 0}}{{toUpper $y.LangKey}}{{end}}{{end}}</td>
+						<td>{{with $x := index .Results 0}}{{toUpper $x.Lang.Language}}</td><td></td><td>{{with $y:=index $x.Translations 0}}{{toUpper $y.Lang.Language}}{{end}}{{end}}</td>
 					</tr>
 					{{range $wordindex, $word := .Results}}
 						{{range $tranindex, $tran := $word.Translations}}
 							<tr class="{{oddOrEven $wordindex}}">
 								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}</strong>{{end}}</td>
 								<td style="width:60%;">{{if eq $tranindex 0}}{{if $word.Description}}({{$word.Description}}){{end}}{{end}} {{if $tran.Description}}<span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
-								<td><a style="color:#777" href="/search/{{langsToKey $tran.LangKey $word.LangKey}}/{{$tran.Word}}">{{$tran.Word}}</a></td>
+								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{$tran.Word}}</a></td>
 							</tr>
 						{{end}}
 						{{if $word.Synonyms}}
 						{{$maxsyn := len $word.Synonyms | dec}}
 						{{$firsttrans := index $word.Translations 0}}
 						<tr class="{{oddOrEven $wordindex}}">
-								<td>Synonyms:</td>
+								<td>{{getString "syns"}}:</td>
 								<td style="width:60%;">
 								{{range $synindex, $syn := $word.Synonyms}}									
-									<a style="color:#777" href="/search/{{langsToKey $syn.LangKey $firsttrans.LangKey}}/{{$syn.Word}}">{{$syn.Word}}</a>{{if ne $synindex $maxsyn}},{{end}}
+									<a style="color:#777" href="/search/{{$syn.Lang.Tag}}{{$firsttrans.Lang.Tag}}/{{$syn.Word}}">{{$syn.Word}}</a>{{if ne $synindex $maxsyn}},{{end}}
 								{{end}}
 								</td>
 								<td></td>

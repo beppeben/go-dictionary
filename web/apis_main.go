@@ -23,9 +23,6 @@ type HtmlContent struct {
 }
 
 var htmlHelpers = template.FuncMap{
-	"langsToKey": func(l1, l2 string) string {
-		return strings.ToLower(l1[:3]) + strings.ToLower(l2[:3])
-	},
 	"oddOrEven": func(num int) string {
 		if math.Mod(float64(num), 2) != 0 {
 			return "odd"
