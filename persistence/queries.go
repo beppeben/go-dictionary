@@ -141,7 +141,7 @@ func (r *SqlRepo) Search(word, fromLang, toLang, baseLang string) (words []*Word
 	var description, definition, loc string
 	for rows.Next() {
 		rows.Scan(&enId, &description, &definition, &loc)
-		lang := &Language{Language: r.langMatrix[fromLang[:3]+baseLang[:3]], Tag: fromLang}
+		lang := &Language{Language: r.langMatrix[fromLang[:3]+baseLang[:3]], Tag: fromLang[:3]}
 		w := &Word{Word: word, Description: description, Definition: definition,
 			Locality: loc, Lang: lang}
 		translations, err := r.translate(w, toLang, baseLang, enId)
@@ -196,7 +196,7 @@ func (r *SqlRepo) translate(word *Word, toLang string, baseLang string, enId int
 	var wrd, description, definition, loc string
 	for rows.Next() {
 		rows.Scan(&wrd, &description, &definition, &loc)
-		if word.Word != wrd || word.Lang.Tag == toLang[:3] {
+		if word.Word != wrd || word.Lang.Tag != toLang[:3] {
 			lang := &Language{Language: r.langMatrix[toLang[:3]+baseLang[:3]], Tag: toLang[:3]}
 			w := &Word{Word: wrd, Description: description, Definition: definition,
 				Locality: loc, Lang: lang}
