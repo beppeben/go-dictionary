@@ -16,10 +16,11 @@ import (
 )
 
 type HtmlContent struct {
-	Languages  []*Language
-	Results    []*Word
-	Fields     []string
-	FieldDescs []string
+	Languages   []*Language
+	Results     []*Word
+	Fields      []string
+	FieldDescs  []string
+	BaseLangTag string
 }
 
 var htmlHelpers = template.FuncMap{
@@ -48,7 +49,7 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 	}
 	t := template.Must(template.New("index.html").Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + "index.html"))
 	langs := handler.repo.GetLanguages(baseLang)
-	content := &HtmlContent{Languages: langs}
+	content := &HtmlContent{Languages: langs, BaseLangTag: baseLang[:3]}
 	if key != "" && term != "" {
 		fromLang, toLang := handler.getLanguagesFromRequest(ps.ByName("langkey"))
 		results, err := handler.repo.Search(term, fromLang, toLang, baseLang)
@@ -80,6 +81,7 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 
 func (handler WebserviceHandler) AboutHTML(w http.ResponseWriter, r *http.Request) {
 	baseLang := handler.getBaseLanguage(r.FormValue("lang"))
+	content := &HtmlContent{BaseLangTag: baseLang[:3]}
 	htmlHelpers["getString"] = func(key string) string {
 		return handler.repo.GetWebTerm(baseLang, key)
 	}
@@ -88,7 +90,7 @@ func (handler WebserviceHandler) AboutHTML(w http.ResponseWriter, r *http.Reques
 	}
 	t := template.Must(template.New("about.html").Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + "about.html"))
 
-	t.Execute(w, "")
+	t.Execute(w, content)
 }
 
 func (handler WebserviceHandler) Autocomplete(w http.ResponseWriter, r *http.Request) {
@@ -133,9 +135,9 @@ func (handler WebserviceHandler) getLanguagesFromRequest(key string) (string, st
 func (handler WebserviceHandler) getBaseLanguage(key string) string {
 	baseLang := "english"
 	if key != "" {
-		baseLang = handler.repo.GetLangFromKey(key)
-		if baseLang == "" {
-			panic("Invalid language")
+		lang := handler.repo.GetLangFromKey(key)
+		if lang != "" {
+			baseLang = lang
 		}
 	}
 	return baseLang

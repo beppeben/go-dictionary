@@ -250,19 +250,19 @@ func (r *SqlRepo) createTableFromMatrix(tx *sql.Tx, title string, matrix [][]str
 }
 
 func (r *SqlRepo) checkLanguageHeaders(title string, headers []string) error {
-	if len(headers) != len(r.languages) {
+	if len(headers) < len(r.languages) {
 		return fmt.Errorf("Table %v does not contain all the language columns: "+
 			"expected %d, got %d", title, len(r.languages), len(headers))
 	}
-	headers_sorted := make([]string, len(headers))
+	headers_sorted := make([]string, len(r.languages))
 	languages_sorted := make([]string, len(r.languages))
-	for i := 0; i < len(headers); i++ {
+	for i := 0; i < len(r.languages); i++ {
 		headers_sorted[i] = strings.ToLower(headers[i])
 		languages_sorted[i] = strings.ToLower(r.languages[i])
 	}
 	sort.Strings(headers_sorted)
 	sort.Strings(languages_sorted)
-	for i := 0; i < len(headers); i++ {
+	for i := 0; i < len(r.languages); i++ {
 		if headers_sorted[i] != languages_sorted[i] {
 			return fmt.Errorf("Some languages are missing from Table %v", title)
 		}
