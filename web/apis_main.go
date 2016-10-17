@@ -23,6 +23,7 @@ type HtmlContent struct {
 	BaseLangTag string
 }
 
+/*
 var htmlHelpers = template.FuncMap{
 	"oddOrEven": func(num int) string {
 		if math.Mod(float64(num), 2) != 0 {
@@ -38,15 +39,38 @@ var htmlHelpers = template.FuncMap{
 		return num - 1
 	},
 }
+*/
+
+func (handler WebserviceHandler) getHelpers(baseLang string) template.FuncMap {
+	return template.FuncMap{
+		"oddOrEven": func(num int) string {
+			if math.Mod(float64(num), 2) != 0 {
+				return "odd"
+			} else {
+				return "even"
+			}
+		},
+		"toUpper": func(text string) string {
+			return strings.ToUpper(text[0:1]) + text[1:]
+		},
+		"dec": func(num int) int {
+			return num - 1
+		},
+		"getString": func(key string) string {
+			return handler.repo.GetWebTerm(baseLang, key)
+		},
+		"getHtml": func(key string) template.HTML {
+			return template.HTML(handler.repo.GetWebTerm(baseLang, key))
+		},
+	}
+}
 
 func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Request) {
 	baseLang := handler.getBaseLanguage(r.FormValue("lang"))
 	ps := context.Get(r, "params").(httprouter.Params)
 	key := ps.ByName("langkey")
 	term := ps.ByName("term")
-	htmlHelpers["getString"] = func(key string) string {
-		return handler.repo.GetWebTerm(baseLang, key)
-	}
+	htmlHelpers := handler.getHelpers(baseLang)
 	t := template.Must(template.New("index.html").Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + "index.html"))
 	langs := handler.repo.GetLanguages(baseLang)
 	content := &HtmlContent{Languages: langs, BaseLangTag: baseLang[:3]}
@@ -80,16 +104,18 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 }
 
 func (handler WebserviceHandler) AboutHTML(w http.ResponseWriter, r *http.Request) {
-	baseLang := handler.getBaseLanguage(r.FormValue("lang"))
-	content := &HtmlContent{BaseLangTag: baseLang[:3]}
-	htmlHelpers["getString"] = func(key string) string {
-		return handler.repo.GetWebTerm(baseLang, key)
-	}
-	htmlHelpers["getHtml"] = func(key string) template.HTML {
-		return template.HTML(handler.repo.GetWebTerm(baseLang, key))
-	}
-	t := template.Must(template.New("about.html").Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + "about.html"))
+	handler.executeBasicTemplate(w, r, "about.html")
+}
 
+func (handler WebserviceHandler) TermsHTML(w http.ResponseWriter, r *http.Request) {
+	handler.executeBasicTemplate(w, r, "terms.html")
+}
+
+func (handler WebserviceHandler) executeBasicTemplate(w http.ResponseWriter, r *http.Request, name string) {
+	baseLang := handler.getBaseLanguage(r.FormValue("lang"))
+	htmlHelpers := handler.getHelpers(baseLang)
+	t := template.Must(template.New(name).Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + name))
+	content := &HtmlContent{BaseLangTag: baseLang[:3]}
 	t.Execute(w, content)
 }
 

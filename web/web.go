@@ -66,6 +66,7 @@ func (h WebserviceHandler) StartServer() {
 	h.mrouter.Get("/services/notify", commonHandlers.ThenFunc(h.Notify))
 	h.mrouter.Get("/search/:langkey/:term", commonHandlers.ThenFunc(h.IndexHTML))
 	h.mrouter.Get("/index.html", commonHandlers.ThenFunc(h.IndexHTML))
+	h.mrouter.Get("/terms.html", commonHandlers.ThenFunc(h.TermsHTML))
 	h.mrouter.Get("/about.html", commonHandlers.ThenFunc(h.AboutHTML))
 	h.mrouter.Get("/", commonHandlers.ThenFunc(h.IndexHTML))
 
