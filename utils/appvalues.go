@@ -69,6 +69,6 @@ func (val *AppConfig) GetSMTPPort() string {
 	return val.v.GetString("SMTP_PORT")
 }
 
-func (val *AppConfig) GetAdminEmail() string {
-	return val.v.GetString("ADMIN_EMAIL")
+func (val *AppConfig) GetAdminEmails() []string {
+	return val.v.GetStringSlice("ADMIN_EMAILS")
 }

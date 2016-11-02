@@ -70,7 +70,7 @@ func getDbType(sample string, title string) string {
 		return "INT NOT NULL"
 	}
 	if title == "description" || title == "definition" || title == "about_html" || title == "terms_html" {
-		return "VARCHAR(5000)"
+		return "VARCHAR(10000)"
 	}
 	return "VARCHAR(255)"
 }

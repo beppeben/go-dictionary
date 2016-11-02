@@ -12,7 +12,7 @@ type EmailConfig interface {
 	GetEmailPass() string
 	GetSMTP() string
 	GetSMTPPort() string
-	GetAdminEmail() string
+	GetAdminEmails() []string
 }
 
 type EmailUtils struct {
@@ -58,6 +58,11 @@ func (u *EmailUtils) SendEmail(toEmail string, subject string, body string) erro
 	return err
 }
 
-func (u *EmailUtils) SendEmailToAdmin(subject, body string) error {
-	return u.SendEmail(u.config.GetAdminEmail(), subject, body)
+func (u *EmailUtils) SendEmailToAdmins(subject, body string) (err error) {
+	for _, email := range u.config.GetAdminEmails() {
+		if err == nil {
+			err = u.SendEmail(email, subject, body)
+		}
+	}
+	return
 }

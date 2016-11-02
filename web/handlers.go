@@ -9,14 +9,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/context"
+	"github.com/julienschmidt/httprouter"
+
 	log "github.com/Sirupsen/logrus"
 )
 
 func (handler WebserviceHandler) BasicAuth(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		authError := func() {
-			w.Header().Set("WWW-Authenticate", "Basic realm=\"m3m3\"")
-			http.Error(w, "authorization failed", http.StatusUnauthorized)
+			w.Header().Set("WWW-Authenticate", "Basic realm")
+			http.Error(w, "Authorization failed", http.StatusUnauthorized)
 		}
 
 		auth := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
@@ -71,6 +74,18 @@ func (handler WebserviceHandler) LoggingHandler(next http.Handler) http.Handler 
 		next.ServeHTTP(w, r)
 		t2 := time.Now()
 		log.Infof("%s request to %q: time %v", r.Method, r.URL.String(), t2.Sub(t1))
+	}
+	return http.HandlerFunc(fn)
+}
+
+func (handler WebserviceHandler) StatsHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+		ip := strings.Split(r.RemoteAddr, ":")[0]
+		key := ip + r.UserAgent()
+		ps := context.Get(r, "params").(httprouter.Params)
+		term := ps.ByName("term")
+		go handler.stats.NotifyUser(&User{Ip: ip, Referer: r.Referer(), UserAgent: r.UserAgent()}, key, term)
 	}
 	return http.HandlerFunc(fn)
 }

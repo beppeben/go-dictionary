@@ -8,4 +8,4 @@ EMAIL = "hey@test.com"
 EMAIL_PASS = "pass"
 SMTP = "mail.ex.com"
 SMTP_PORT = "123"
-ADMIN_EMAIL = "test@gmail.com"
+ADMIN_EMAILS = ["test@test.com", "test@test.com"]

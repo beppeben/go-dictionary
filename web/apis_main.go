@@ -23,24 +23,6 @@ type HtmlContent struct {
 	BaseLangTag string
 }
 
-/*
-var htmlHelpers = template.FuncMap{
-	"oddOrEven": func(num int) string {
-		if math.Mod(float64(num), 2) != 0 {
-			return "odd"
-		} else {
-			return "even"
-		}
-	},
-	"toUpper": func(text string) string {
-		return strings.ToUpper(text[0:1]) + text[1:]
-	},
-	"dec": func(num int) int {
-		return num - 1
-	},
-}
-*/
-
 func (handler WebserviceHandler) getHelpers(baseLang string) template.FuncMap {
 	return template.FuncMap{
 		"oddOrEven": func(num int) string {
@@ -139,7 +121,7 @@ func (handler WebserviceHandler) Notify(w http.ResponseWriter, r *http.Request) 
 	}
 	message := "Word: " + term + "\nDictionary: " + fromLang + "-" + toLang
 	go func() {
-		err := handler.eutils.SendEmailToAdmin("Suggestion received", message)
+		err := handler.eutils.SendEmailToAdmins("Suggestion received", message)
 		if err != nil {
 			log.Info(err.Error())
 		}

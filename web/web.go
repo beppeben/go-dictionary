@@ -34,7 +34,7 @@ type SysUtils interface {
 
 type EmailUtils interface {
 	SendEmail(email, title, text string) error
-	SendEmailToAdmin(subject, body string) error
+	SendEmailToAdmins(subject, body string) error
 }
 
 type WebserviceHandler struct {
@@ -44,6 +44,7 @@ type WebserviceHandler struct {
 	config  ServerConfig
 	sutils  SysUtils
 	eutils  EmailUtils
+	stats   *StatsTracker
 }
 
 type router struct {
@@ -51,19 +52,21 @@ type router struct {
 }
 
 func NewWebHandler(repo Repository, c ServerConfig, s SysUtils, e EmailUtils) *WebserviceHandler {
-	return &WebserviceHandler{repo: repo, config: c, sutils: s, eutils: e}
+	tracker := NewStatsTracker(e)
+	return &WebserviceHandler{repo: repo, config: c, sutils: s, eutils: e, stats: tracker}
 }
 
 func (h WebserviceHandler) StartServer() {
-	commonHandlers := alice.New(context.ClearHandler, h.LoggingHandler, h.RecoverHandler)
+	commonHandlers := alice.New(context.ClearHandler, h.LoggingHandler, h.StatsHandler, h.RecoverHandler)
+	commonHandlersNoStats := alice.New(context.ClearHandler, h.LoggingHandler, h.RecoverHandler)
 	h.mrouter = NewRouter()
 	h.frouter = http.NewServeMux()
 	h.frouter.Handle("/", http.FileServer(http.Dir(h.config.GetHTTPDir())))
 
-	h.mrouter.Get("/services/autocomplete/:langkey", commonHandlers.ThenFunc(h.Autocomplete))
-	h.mrouter.Post("/services/deployFront", commonHandlers.Append(h.BasicAuth).ThenFunc(h.DeployFront))
-	h.mrouter.Post("/services/deployDb", commonHandlers.Append(h.BasicAuth).ThenFunc(h.DeployDb))
-	h.mrouter.Get("/services/notify", commonHandlers.ThenFunc(h.Notify))
+	h.mrouter.Get("/services/autocomplete/:langkey", commonHandlersNoStats.ThenFunc(h.Autocomplete))
+	h.mrouter.Post("/services/deployFront", commonHandlersNoStats.Append(h.BasicAuth).ThenFunc(h.DeployFront))
+	h.mrouter.Post("/services/deployDb", commonHandlersNoStats.Append(h.BasicAuth).ThenFunc(h.DeployDb))
+	h.mrouter.Get("/services/notify", commonHandlersNoStats.ThenFunc(h.Notify))
 	h.mrouter.Get("/search/:langkey/:term", commonHandlers.ThenFunc(h.IndexHTML))
 	h.mrouter.Get("/index.html", commonHandlers.ThenFunc(h.IndexHTML))
 	h.mrouter.Get("/terms.html", commonHandlers.ThenFunc(h.TermsHTML))
@@ -105,9 +108,13 @@ func wrapHandler(h http.Handler) httprouter.Handle {
 
 func (handler WebserviceHandler) FrontHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/css") || strings.HasPrefix(r.URL.Path, "/js") ||
-		strings.HasPrefix(r.URL.Path, "/deploy.html") {
+		strings.HasPrefix(r.URL.Path, "/deploy.html") || strings.HasPrefix(r.URL.Path, "/media") ||
+		strings.HasPrefix(r.URL.Path, "/google") {
+
+		// serve static files
 		handler.frouter.ServeHTTP(w, r)
 	} else {
+		// serve dynamic files
 		handler.mrouter.ServeHTTP(w, r)
 	}
 }
