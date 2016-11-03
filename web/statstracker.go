@@ -20,6 +20,7 @@ type User struct {
 	Counter       int64
 	Referer       string
 	UserAgent     string
+	LastUri       string
 }
 
 type StatsTracker struct {
@@ -52,6 +53,7 @@ func (stats *StatsTracker) sendSummaryAndClear() {
 		buffer.WriteString("Agent: " + user.UserAgent + ". ")
 		buffer.WriteString("Referer: " + user.Referer + ". ")
 		buffer.WriteString("Hits: " + strconv.FormatInt(user.Counter, 10) + ". ")
+		buffer.WriteString("Last Uri: " + user.LastUri + ". ")
 		if len(user.SearchedWords) > 0 {
 			buffer.WriteString("Words:")
 			i := 0
@@ -76,37 +78,12 @@ func (stats *StatsTracker) getOrAddUser(usr *User, key string) *User {
 		stats.keyToUser[key] = user
 	}
 	user.Counter++
+	user.LastUri = usr.LastUri
 	if user.City == "" {
 		user.getLocation()
 	}
 	return user
 }
-
-/*
-func (stats *StatsTracker) getOrAddUser(ip string, key string) *User {
-	user := stats.keyToUser[key]
-	if user == nil {
-		user = &User{Ip: ip}
-		user.SearchedWords = make(map[string]bool)
-		stats.keyToUser[key] = user
-	}
-	user.Counter++
-	if user.City == "" {
-		user.getLocation()
-	}
-	return user
-}
-*/
-/*
-func (stats *StatsTracker) NotifyUser(ip string, key string, word string) {
-	stats.mutex.Lock()
-	defer stats.mutex.Unlock()
-	user := stats.getOrAddUser(ip, key)
-	if word != "" {
-		user.SearchedWords[word] = true
-	}
-}
-*/
 
 func (stats *StatsTracker) NotifyUser(usr *User, key string, word string) {
 	stats.mutex.Lock()
