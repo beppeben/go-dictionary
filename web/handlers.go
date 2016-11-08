@@ -85,8 +85,11 @@ func (handler WebserviceHandler) StatsHandler(next http.Handler) http.Handler {
 		key := ip + r.UserAgent()
 		ps := context.Get(r, "params").(httprouter.Params)
 		term := ps.ByName("term")
-		go handler.stats.NotifyUser(&User{Ip: ip, Referer: r.Referer(),
-			UserAgent: r.UserAgent(), LastUri: r.RequestURI}, key, term)
+		agent := r.UserAgent()
+		if !strings.Contains(agent, "Google") && !strings.Contains(agent, "Scanbot") && agent != "" {
+			go handler.stats.NotifyUser(&User{Ip: ip, Referer: r.Referer(),
+				UserAgent: agent, LastUri: r.RequestURI}, key, term)
+		}
 	}
 	return http.HandlerFunc(fn)
 }
