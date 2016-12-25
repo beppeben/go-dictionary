@@ -3,7 +3,7 @@
     <meta charset="utf-8">
     <title>AZ Jewels</title>
 	<meta name="keywords" content="jewelry, horology, luxury goods, dictionary, translations">
-    <!--<link rel="shortcut icon" href="https://pixabay.com/favicon.ico">-->
+    <link rel="icon" href="/media/favicon.ico"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300">
     <link rel="stylesheet" href="https://cdn.rawgit.com/yahoo/pure-release/v0.6.0/pure-min.css">
@@ -15,10 +15,10 @@
 	<div class="page-wrap">
 
     <div style="max-width:900px;padding-top:40px;margin:0 auto;text-align:center">
-        <span class="title"><a href="/">{{getString "title"}}</a></span>
+        <span class="title"><a class="titletext" href="/">{{getString "title"}}</a></span>
         <h2 style="margin-top:20px">{{getString "header"}}</h2>
     </div>
-    <form onsubmit="$('#search-text').blur();return false;" class="pure-form" style="border-top: 1px solid #eee;border-bottom:1px solid #eee;background:#fafafa;margin:30px 0;padding:20px 10px;text-align:center">
+    <form onsubmit="searchWordIfPresent();return false;" class="pure-form" style="border-top: 1px solid #eee;border-bottom:1px solid #eee;background:#fafafa;margin:30px 0;padding:20px 10px;text-align:center">
         <input id="search-text" class="clearable" autofocus type="search" name="q" placeholder="{{getString "search_word"}}..." style="width:100%;max-width:600px;outline:0">
 	
 	<select id="select">
@@ -57,9 +57,9 @@
 					{{range $wordindex, $word := .Results}}
 						{{range $tranindex, $tran := $word.Translations}}
 							<tr class="{{oddOrEven $wordindex}}">
-								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}</strong>{{end}}</td>
+								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}{{if $word.Locality}} ({{$word.Locality}}){{end}}</strong>{{end}}</td>
 								<td style="width:60%;">{{if eq $tranindex 0}}{{if $word.Description}}({{$word.Description}}){{end}}{{end}} {{if $tran.Description}}<span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
-								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{$tran.Word}}</a></td>
+								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{$tran.Word}}{{if $tran.Locality}} ({{$tran.Locality}}){{end}}</a></td>
 							</tr>
 						{{end}}
 						{{if $word.Synonyms}}
@@ -89,10 +89,12 @@
 
 	<footer class="site-footer">
 		<div style="padding-top:40px">
-			<a id="about" href="#"><span style="font-style: italic;font-size: 0.9em;margin-right:20px">{{getString "about_us"}}</span></a>
+			<a href="/about.html?lang={{.BaseLangTag}}"><span style="font-style: italic;font-size: 0.9em;margin-right:20px">{{getString "about_us"}}</span></a>
+			<a href="/terms.html?lang={{.BaseLangTag}}"><span style="font-style: italic;font-size: 0.9em;margin-right:20px">{{getString "terms_short"}}</span></a>
 			<select id="mainlang" style="font-size: 0.9em">
+				{{$base := .BaseLangTag}}
 				{{range $lang := .Languages}}
-					<option value="{{$lang.Tag}}" >{{$lang.Language}}</option>  
+					<option value="{{$lang.Tag}}" {{if eq $lang.Tag $base}}selected{{end}} >{{$lang.Language}}</option>  
 				{{end}}
 			</select>
         </div>

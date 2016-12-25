@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	. "github.com/beppeben/go-dictionary/domain"
+	. "github.com/beppeben/go-dictionary/utils"
 )
 
 const (
@@ -80,22 +81,23 @@ func (r *SqlRepo) queryAndAddToSets(statement string, set1 map[string]bool, set2
 }
 
 func (r *SqlRepo) GetWordsWithTerm(term string, lang1 string, lang2 string) (words []*SimpleWord, err error) {
+	term = MapToASCII(term)
 	words1, words2, err := r.GetWords(lang1, lang2)
 	if err != nil {
 		return nil, err
 	}
 	words = make([]*SimpleWord, 0)
 	for _, w := range words1 {
-		if strings.Contains(strings.ToLower(w.Word), strings.ToLower(term)) {
+		if strings.Contains(MapToASCII(w.Word), term) {
 			words = append(words, w)
 		}
 	}
 	for _, w := range words2 {
-		if strings.Contains(strings.ToLower(w.Word), strings.ToLower(term)) {
+		if strings.Contains(MapToASCII(w.Word), term) {
 			words = append(words, w)
 		}
 	}
-	sort.Sort(LeastWordsAlphabeticSimple{Words: words, Term: strings.ToLower(term), LangFirst: lang1})
+	sort.Sort(LeastWordsAlphabeticSimple{Words: words, Term: term, LangFirst: lang1})
 	return
 }
 

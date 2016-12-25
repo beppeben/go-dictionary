@@ -18,22 +18,30 @@ import (
 func (handler WebserviceHandler) BasicAuth(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		authError := func() {
+			log.Debug("Asking client to authenticate... setting header")
 			w.Header().Set("WWW-Authenticate", "Basic realm")
+			log.Debug("Sending error")
 			http.Error(w, "Authorization failed", http.StatusUnauthorized)
 		}
-
-		auth := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+		log.Debug("Checking authorization header")
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			authError()
+			return
+		}
+		log.Debug("Reading authorization header")
+		auth := strings.SplitN(authHeader, " ", 2)
 		if len(auth) != 2 || auth[0] != "Basic" {
 			authError()
 			return
 		}
-
+		log.Debug("Decoding password")
 		payload, err := base64.StdEncoding.DecodeString(auth[1])
 		if err != nil {
 			authError()
 			return
 		}
-
+		log.Debug("Checking password")
 		pair := strings.SplitN(string(payload), ":", 2)
 		if len(pair) != 2 || !handler.ValidateAdmin(pair[0], pair[1]) {
 			authError()

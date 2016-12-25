@@ -25,6 +25,7 @@ func (handler WebserviceHandler) DeployFront(w http.ResponseWriter, r *http.Requ
 }
 
 func (handler WebserviceHandler) DeployDb(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Receiving db file")
 	file, _, err := r.FormFile("bundle")
 	if err != nil {
 		log.Warnf("%s", err)
@@ -32,6 +33,7 @@ func (handler WebserviceHandler) DeployDb(w http.ResponseWriter, r *http.Request
 		return
 	}
 	defer file.Close()
+	log.Debug("Copying file to folder")
 	err = handler.sutils.CopyFileToExcelDir(file)
 	if err != nil {
 		log.Warnf("%s", err)

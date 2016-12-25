@@ -1,95 +1,33 @@
-function redirectLang() {
-	var baseLang = qs("lang");
-	if (!baseLang) {
-		var userLang = navigator.language || navigator.userLanguage;
+package utils
 
-		switch(userLang.split('-')[0]) {
-			case "it": baseLang = "ita"; break;
-			case "fr": baseLang = "fre"; break;
-			case "de": baseLang = "ger"; break;
-			case "es": baseLang = "spa"; break;
-			case "ru": baseLang = "rus"; break;
-			case "ja": baseLang = "jap"; break;
-			case "zh": baseLang = "chi"; break;
-		} 
+import (
+	"bytes"
+	"strings"
+)
 
-		if (baseLang) {
-			window.location.replace("?lang=" + baseLang);
+func Contains(slice []string, term string) bool {
+	for _, s := range slice {
+		if s == term {
+			return true
 		}
 	}
+	return false
 }
 
-
-function qs(key) {
-	key = key.replace(/[*+?^$.\[\]{}()|\\\/]/g, "\\$&");
-	var match = location.search.match(new RegExp("[?&]"+key+"=([^&]+)(&|$)"));
-	return match && decodeURIComponent(match[1].replace(/\+/g, " "));
-}
-
-function searchWord(word) {
-	var url = "/search/" + $('#select').val() + "/" + word + "?lang=" + qs("lang");
-	window.location.replace(url);
-}
-
-function searchWordIfPresent() {
-	var word = mapToASCII($('#search-text').val());
-	for (i = 0; i < myCurrentWords.length; i++) {
-		if (mapToASCII(myCurrentWords[i].w) == word) {
-			searchWord(myCurrentWords[i].w);
-			return;
+func MapToASCII(text string) string {
+	runes := []rune(text)
+	var buffer bytes.Buffer
+	for i := 0; i < len(runes); i++ {
+		if accentMap[runes[i]] != 0 {
+			buffer.WriteRune(accentMap[runes[i]])
+		} else {
+			buffer.WriteString(strings.ToLower(string(runes[i])))
 		}
 	}
-	$('#notfoundText').show();
-	$('#container').hide();
-	$("#thanks").hide();
-	$(".autocomplete-suggestion").hide();
+	return buffer.String()
 }
 
-function mapToASCII(s) {
-	if (!s) { return ''; }
-    var ret = '';
-    for (var i = 0; i < s.length; i++) {
-		ret += accent_map[s.charAt(i)] || s.charAt(i).toLowerCase();
-    }
-    return ret;
-};
-
-function highlight(str, q) {
-  var str_folded = mapToASCII(str).toLowerCase().replace(/[<>]+/g, '');
-  var q_folded = mapToASCII(q).toLowerCase().replace(/[<>]+/g, '');
-
-  // create an intermediary string with hilite hints
-  // example: fulani<lo> <lo>pez
-  var re = new RegExp(q_folded, 'g');
-  var hilite_hints = str_folded.replace(re, '<' + q_folded + '>');
-
-  // index pointer for the original string
-  var spos = 0;
-  // accumulator for our final string
-  var highlighted = '';
-
-  // walk down the original string and the hilite hint
-  // string in parallel. when you encounter a < or > hint,
-  // append the opening / closing tag in our final string.
-  // if the current char is not a hint, append the corresponding
-  // char from the *original* string to our final string and
-  // advance the original string's pointer.
-  for (var i = 0; i < hilite_hints.length; i++) {
-    var c = str.charAt(spos);
-    var h = hilite_hints.charAt(i);
-    if (h === '<') {
-       highlighted += '<b>';
-    } else if (h === '>') {
-       highlighted += '</b>';
-    } else {
-      spos += 1;
-      highlighted += c;
-    }
-  }
-  return highlighted;
-}
-
-var accent_map = {
+var accentMap = map[rune]rune{
 	'ẚ': 'a',
 	'Á': 'a',
 	'á': 'a',
@@ -796,6 +734,4 @@ var accent_map = {
 	'ｋ': 'k',
 	'ｏ': 'o',
 	'ｓ': 's',
-	'ｗ': 'w'};
-
-
+	'ｗ': 'w'}

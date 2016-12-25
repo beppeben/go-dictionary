@@ -1,3 +1,5 @@
+var myCurrentWords = [];
+
 $('#search-text').val('');
 	
 jQuery(function($) { 
@@ -20,7 +22,7 @@ $("#notfoundSend").click(function() {
 	$('#notfoundText').hide();
 });
 
-$('#search-text').keyup( function () {
+$('#search-text').keyup( function(e) {
 	if (this.value.length <= 2){
 		$('#notfoundText').hide();
 		$("#thanks").hide();
@@ -40,14 +42,6 @@ if (myArray != null) {
 	$('#select').val(myArray[1]);
 }
 
-var baseLang = qs("lang");
-var aboutUrl = "/about.html"
-if (baseLang) {
-	$('#mainlang').val(baseLang);
-	aboutUrl += "?lang=" + baseLang;
-} 
-document.getElementById('about').href = aboutUrl;
-
 $('#mainlang').change( function () {
 	window.location.replace("?lang=" + this.value);
 });
@@ -59,6 +53,7 @@ $(function() {
       	minChars: 2,
 		source: function(term, response){
     			$.getJSON('/services/autocomplete/' + $('#select').val(), { term: term }, function(data){ 
+				myCurrentWords = data;
 				response(data);
 				if (data.length > 0){
 					$('#notfoundText').hide();
@@ -71,17 +66,14 @@ $(function() {
 		},
 		renderItem: function (item, search){
        		search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-           	var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
-           	return '<div class="autocomplete-suggestion" data-term="'+item.w+'" data-val="'+search+'">'+ '(' + item.t.substring(0, 2) + ') '+item.w.replace(re, "<b>$1</b>")+'</div>';
+           	//var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
+			//var re = new RegExp("(" + search + ")", "gi");
+			var highlighted = highlight(item.w, search);
+           	return '<div class="autocomplete-suggestion" data-term="'+item.w+'" data-val="'+search+'">'+ '(' + item.t.substring(0, 2) + ') '+highlighted+'</div>';
         },
 		onSelect: function(e, term, item){
-         	//console.log('Item selected by '+(e.type == 'keydown' ? 'pressing enter or tab' : 'mouse click')+'.');
            	$('#search-text').val(item.data('term'));
-			var url = "/search/" + $('#select').val() + "/" + item.data('term');
-			if (baseLang) {
-				url += "?lang=" + baseLang;
-			}
-			window.location.replace(url);
+			searchWord(item.data('term'));
       	},
 		cache: false
  	});

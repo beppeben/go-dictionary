@@ -2,6 +2,8 @@ package domain
 
 import (
 	"strings"
+
+	"github.com/beppeben/go-dictionary/utils"
 )
 
 type Word struct {
@@ -58,8 +60,8 @@ func (a LeastWordsAlphabeticSimple) Less(i, j int) bool {
 		}
 	}
 	if a.Term != "" {
-		prefix_i := strings.HasPrefix(strings.ToLower(a.Words[i].Word), a.Term)
-		prefix_j := strings.HasPrefix(strings.ToLower(a.Words[j].Word), a.Term)
+		prefix_i := strings.HasPrefix(utils.MapToASCII(a.Words[i].Word), a.Term)
+		prefix_j := strings.HasPrefix(utils.MapToASCII(a.Words[j].Word), a.Term)
 		if prefix_i && !prefix_j {
 			return true
 		} else if prefix_j && !prefix_i {
