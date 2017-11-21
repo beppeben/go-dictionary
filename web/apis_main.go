@@ -97,7 +97,8 @@ func (handler WebserviceHandler) executeBasicTemplate(w http.ResponseWriter, r *
 	baseLang := handler.getBaseLanguage(r.FormValue("lang"))
 	htmlHelpers := handler.getHelpers(baseLang)
 	t := template.Must(template.New(name).Funcs(htmlHelpers).ParseFiles(handler.config.GetHTTPDir() + name))
-	content := &HtmlContent{BaseLangTag: baseLang[:3]}
+	langs := handler.repo.GetLanguages(baseLang)
+	content := &HtmlContent{Languages: langs, BaseLangTag: baseLang[:3]}
 	t.Execute(w, content)
 }
 

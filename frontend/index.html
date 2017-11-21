@@ -15,13 +15,13 @@
 	<div class="page-wrap">
 
     <div style="max-width:900px;padding-top:40px;margin:0 auto;text-align:center">
-        <span class="title"><a class="titletext" href="/">{{getString "title"}}</a></span>
-        <h2 style="margin-top:20px">{{getString "header"}}</h2>
+        <span class="title"><a class="titletext" href="/"><img src="/media/logo.png" height="200" width="200"></a></span>
+        <h2 style="margin-top:0px">{{getString "header"}}</h2>
     </div>
     <form onsubmit="searchWordIfPresent();return false;" class="pure-form" style="border-top: 1px solid #eee;border-bottom:1px solid #eee;background:#fafafa;margin:30px 0;padding:20px 10px;text-align:center">
         <input id="search-text" class="clearable" autofocus type="search" name="q" placeholder="{{getString "search_word"}}..." style="width:100%;max-width:600px;outline:0">
 	
-	<select id="select">
+	<select id="select" class="selection" style="padding-left:25px; margin-left:10px;">
 	{{$langs := .Languages}}
 	{{range $lang1 := $langs}}
 	  <optgroup label="{{$lang1.Language}}">
@@ -38,19 +38,21 @@
 	
 	<div id="container">
 		{{if .Results}}
-			{{with $x := index .Results 0}}
-			<h3>{{$x.Word}}</h3>
-			{{end}}
+		    <div style="text-align:center">
+			    {{with $x := index .Results 0}}
+			    <h3>{{$x.Word}}</h3>
+			    {{end}}
 		
-			{{$fdescs := .FieldDescs}}
-			{{range $fieldindex, $field := .Fields}}
-				<p style="padding-top:2px; padding-bottom:2px"> <span title="{{index $fdescs $fieldindex}}">{{$field}}</span></p>
-			{{end}}
-			<table class="translations">
+			    {{$fdescs := .FieldDescs}}
+			    {{range $fieldindex, $field := .Fields}}
+				    <p style="padding-top:2px; padding-bottom:2px"> <span title="{{index $fdescs $fieldindex}}">{{$field}}</span></p>
+			    {{end}}
+			</div>
+			<table style="width:100%">
 				<tbody>
-					<tr>
-						<td colspan="3" title="Principal Translations"></td>
-					</tr>
+					<!--<tr>
+						<td colspan="3" title="Principal Translations" style="padding:5px"></td>
+					</tr> -->
 					<tr class="langHeader">
 						<td>{{with $x := index .Results 0}}{{toUpper $x.Lang.Language}}</td><td></td><td>{{with $y:=index $x.Translations 0}}{{toUpper $y.Lang.Language}}{{end}}{{end}}</td>
 					</tr>
@@ -58,7 +60,7 @@
 						{{range $tranindex, $tran := $word.Translations}}
 							<tr class="{{oddOrEven $wordindex}}">
 								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}{{if $word.Locality}} ({{$word.Locality}}){{end}}</strong>{{end}}</td>
-								<td style="width:60%;">{{if eq $tranindex 0}}{{if $word.Description}}({{$word.Description}}){{end}}{{end}} {{if $tran.Description}}<span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
+								<td>{{if eq $tranindex 0}}{{if $word.Description}}(<i>{{$word.Description}}</i>) {{if $tran.Description}} <br /> {{end}}{{end}}{{end}} {{if $tran.Description}}  <span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
 								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{$tran.Word}}{{if $tran.Locality}} ({{$tran.Locality}}){{end}}</a></td>
 							</tr>
 						{{end}}
@@ -67,7 +69,7 @@
 						{{$firsttrans := index $word.Translations 0}}
 						<tr class="{{oddOrEven $wordindex}}">
 								<td>{{getString "syns"}}:</td>
-								<td style="width:60%;">
+								<td>
 								{{range $synindex, $syn := $word.Synonyms}}									
 									<a style="color:#777" href="/search/{{$syn.Lang.Tag}}{{$firsttrans.Lang.Tag}}/{{$syn.Word}}">{{$syn.Word}}</a>{{if ne $synindex $maxsyn}},{{end}}
 								{{end}}
@@ -89,17 +91,18 @@
 
 	<footer class="site-footer">
 		<div style="padding-top:40px">
-			<a href="/about.html?lang={{.BaseLangTag}}"><span style="font-style: italic;font-size: 0.9em;margin-right:20px">{{getString "about_us"}}</span></a>
-			<a href="/terms.html?lang={{.BaseLangTag}}"><span style="font-style: italic;font-size: 0.9em;margin-right:20px">{{getString "terms_short"}}</span></a>
-			<select id="mainlang" style="font-size: 0.9em">
+			
+			<a href="/about.html?lang={{.BaseLangTag}}"><span style="font-size: 0.9em;margin-right:40px">{{getString "about_us"}}</span></a>
+			<a href="/terms.html?lang={{.BaseLangTag}}"><span style="font-size: 0.9em;margin-right:40px">{{getString "terms_short"}}</span></a>
+			
+			<select id="mainlang" class="selection" style="font-size: 0.9em">
 				{{$base := .BaseLangTag}}
 				{{range $lang := .Languages}}
 					<option value="{{$lang.Tag}}" {{if eq $lang.Tag $base}}selected{{end}} >{{$lang.Language}}</option>  
 				{{end}}
 			</select>
         </div>
-		
-
+        
 	</footer>
 	
     <script src="/js/jquery-1.11.1.min.js"></script>

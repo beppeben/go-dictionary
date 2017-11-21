@@ -14,7 +14,7 @@
 <body>
 
     <div style="max-width:900px;padding-top:40px;margin:0 auto;text-align:center">
-		<span class="title"><a class="titletext" href="/?lang={{.BaseLangTag}}">{{getString "title"}}</a></span>
+		<span class="title"><a class="titletext" href="/?lang={{.BaseLangTag}}"><img src="/media/logo.png" height="200" width="200"></a></span>
         <h2 style="margin-top:20px">{{getString "terms_long"}}</h2>
     </div>
     
@@ -23,6 +23,24 @@
 		{{getHtml "terms_html"}}
 	</div>
 
+    <footer class="site-footer">
+		<div style="padding-top:40px">
+			
+			<a href="/about.html?lang={{.BaseLangTag}}"><span style="font-size: 0.9em;margin-right:40px">{{getString "about_us"}}</span></a>
+			<a href="/terms.html?lang={{.BaseLangTag}}"><span style="font-size: 0.9em;margin-right:40px">{{getString "terms_short"}}</span></a>
+			
+			<select id="mainlang" class="selection" style="font-size: 0.9em">
+				{{$base := .BaseLangTag}}
+				{{range $lang := .Languages}}
+					<option value="{{$lang.Tag}}" {{if eq $lang.Tag $base}}selected{{end}} >{{$lang.Language}}</option>  
+				{{end}}
+			</select>
+        </div>
+        
+	</footer>
+	<script src="/js/jquery-1.11.1.min.js"></script>
+    <script src="/js/jquery.auto-complete.js"></script>
+	<script src="/js/mainLogic.js"></script>
 	
 	
 </body>
