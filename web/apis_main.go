@@ -111,7 +111,12 @@ func (handler WebserviceHandler) Autocomplete(w http.ResponseWriter, r *http.Req
 		panic(err.Error())
 	}
 	enc := json.NewEncoder(w)
-	enc.Encode(result)
+	numResults := len(result)
+	// limit autocomplete results to 10
+	if numResults > 10 {
+		numResults = 10
+	}
+	enc.Encode(result[:numResults])
 }
 
 func (handler WebserviceHandler) Notify(w http.ResponseWriter, r *http.Request) {
