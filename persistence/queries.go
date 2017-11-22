@@ -88,12 +88,12 @@ func (r *SqlRepo) GetWordsWithTerm(term string, lang1 string, lang2 string) (wor
 	}
 	words = make([]*SimpleWord, 0)
 	for _, w := range words1 {
-		if strings.Contains(MapToASCII(w.Word), term) {
+		if strings.Contains(w.WordASCII, term) {
 			words = append(words, w)
 		}
 	}
 	for _, w := range words2 {
-		if strings.Contains(MapToASCII(w.Word), term) {
+		if strings.Contains(w.WordASCII, term) {
 			words = append(words, w)
 		}
 	}
@@ -113,11 +113,11 @@ func (r *SqlRepo) GetWords(lang1 string, lang2 string) (words1 []*SimpleWord, wo
 	r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang1, lang2), set1, set2)
 	r.queryAndAddToSets(translationsAndForeignSynonymsStmt(lang2, lang1), set2, set1)
 	for word, _ := range set1 {
-		words1 = append(words1, &SimpleWord{word, lang1[:3]})
+		words1 = append(words1, &SimpleWord{word, MapToASCII(word), strings.Count(word, " "), lang1[:3]})
 	}
 	sort.Sort(LeastWordsAlphabeticSimple{Words: words1})
 	for word, _ := range set2 {
-		words2 = append(words2, &SimpleWord{word, lang2[:3]})
+		words2 = append(words2, &SimpleWord{word, MapToASCII(word), strings.Count(word, " "), lang2[:3]})
 	}
 	sort.Sort(LeastWordsAlphabeticSimple{Words: words2})
 	r.allWords[lang1+lang2] = &SimpleWordsPair{First: words1, Second: words2}

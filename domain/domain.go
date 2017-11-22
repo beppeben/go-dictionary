@@ -2,8 +2,6 @@ package domain
 
 import (
 	"strings"
-
-	"github.com/beppeben/go-dictionary/utils"
 )
 
 type Word struct {
@@ -26,8 +24,10 @@ type Language struct {
 }
 
 type SimpleWord struct {
-	Word    string `json:"w"`
-	LangTag string `json:"t"`
+	Word        string `json:"w"`
+	WordASCII   string `json:"-"`
+	NumSubWords int    `json:"-"`
+	LangTag     string `json:"t"`
 }
 
 type SimpleWordsPair struct {
@@ -60,18 +60,28 @@ func (a LeastWordsAlphabeticSimple) Less(i, j int) bool {
 		}
 	}
 	if a.Term != "" {
-		prefix_i := strings.HasPrefix(utils.MapToASCII(a.Words[i].Word), a.Term)
-		prefix_j := strings.HasPrefix(utils.MapToASCII(a.Words[j].Word), a.Term)
+		prefix_i := strings.HasPrefix(a.Words[i].WordASCII, a.Term)
+		prefix_j := strings.HasPrefix(a.Words[j].WordASCII, a.Term)
 		if prefix_i && !prefix_j {
 			return true
 		} else if prefix_j && !prefix_i {
 			return false
 		}
 	}
-	return shortestAlphabetical(a.Words[i].Word, a.Words[j].Word)
+	return shortestAlphabeticalWord(a.Words[i], a.Words[j])
 }
 
-func shortestAlphabetical(first, second string) bool {
+func shortestAlphabeticalWord(first, second *SimpleWord) bool {
+	if first.NumSubWords < second.NumSubWords {
+		return true
+	} else if first.NumSubWords > second.NumSubWords {
+		return false
+	}
+
+	return first.Word < second.Word
+}
+
+func shortestAlphabeticalString(first, second string) bool {
 	nwords_i := strings.Count(first, " ")
 	nwords_j := strings.Count(second, " ")
 	if nwords_i < nwords_j {
@@ -96,5 +106,5 @@ func (a LeastWordsAlphabetic) Swap(i, j int) {
 }
 
 func (a LeastWordsAlphabetic) Less(i, j int) bool {
-	return shortestAlphabetical(a.Words[i].Word, a.Words[j].Word)
+	return shortestAlphabeticalString(a.Words[i].Word, a.Words[j].Word)
 }
