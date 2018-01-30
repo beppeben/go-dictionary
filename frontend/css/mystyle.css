@@ -86,14 +86,17 @@ input[type="text"] { border-radius: 0 !important; }
 
 #notfoundWord { color:#ed6B06;font-weight:bold;}
 
-.clearable{
-  background: #fff url(data:image/gif;base64,R0lGODlhBwAHAIAAAP///5KSkiH5BAAAAAAALAAAAAAHAAcAAAIMTICmsGrIXnLxuDMLADs=) no-repeat right -10px center;
-  border: 1px solid #999;
-  padding: 3px 18px 3px 4px; /* Use the same right padding (18) in jQ! */
-  border-radius: 3px;
-  transition: background 0s;
+#search-text {
+    padding-left: 35px;
 }
-.clearable.x  { background-position: right 5px center; }
+
+.clearable{
+  background-image: url(/media/loupe.jpg), url(data:image/gif;base64,R0lGODlhBwAHAIAAAP///5KSkiH5BAAAAAAALAAAAAAHAAcAAAIMTICmsGrIXnLxuDMLADs=);
+  background-repeat: no-repeat, no-repeat;
+  background-position: left, right -20px center;
+  background-size: 32px 32px, 8px 8px;
+}
+.clearable.x  { background-position: left, right 10px center; }
 .clearable.onX{ cursor: pointer; }
 .clearable::-ms-clear {display: none; width:0; height:0;}
 
