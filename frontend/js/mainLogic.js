@@ -8,7 +8,7 @@ jQuery(function($) {
   $(document).on('input', '.clearable', function(){
 	$(this)[tog(this.value)]('x');
   }).on('mousemove', '.x', function( e ){
-	$(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]('onX');   
+	$(this)[tog(this.offsetWidth-22 < e.clientX-this.getBoundingClientRect().left)]('onX');   
   }).on('touchstart click', '.onX', function( ev ){
 	ev.preventDefault();
 	$(this).removeClass('x onX').val('').change().keyup();
@@ -23,7 +23,7 @@ $("#notfoundSend").click(function() {
 });
 
 $('#search-text').keyup( function(e) {
-	if (this.value.length <= 2){
+	if (this.value.length <= 1){
 		$('#notfoundText').hide();
 		$("#thanks").hide();
 		$("#container").show();
@@ -50,7 +50,7 @@ $('#notfoundDictionary').text($("#select option:selected").text());
 
 $(function() {
 	$('#search-text').autoComplete({
-      	minChars: 2,
+      	minChars: 1,
 		source: function(term, response){
     			$.getJSON('/services/autocomplete/' + $('#select').val(), { term: term }, function(data){ 
 				myCurrentWords = data;

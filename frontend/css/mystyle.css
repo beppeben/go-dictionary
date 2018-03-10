@@ -91,10 +91,10 @@ input[type="text"] { border-radius: 0 !important; }
 }
 
 .clearable{
-  background-image: url(/media/loupe.jpg), url(data:image/gif;base64,R0lGODlhBwAHAIAAAP///5KSkiH5BAAAAAAALAAAAAAHAAcAAAIMTICmsGrIXnLxuDMLADs=);
+  background-image: url(/media/loupe.jpg), url(/media/cross.png);
   background-repeat: no-repeat, no-repeat;
   background-position: left, right -20px center;
-  background-size: 32px 32px, 8px 8px;
+  background-size: 32px 32px, 12px 12px;
 }
 .clearable.x  { background-position: left, right 10px center; }
 .clearable.onX{ cursor: pointer; }
