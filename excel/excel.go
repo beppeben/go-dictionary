@@ -46,8 +46,8 @@ func (e *ExcelReader) GetMatrix(title string) ([][]string, error) {
 	}
 	cols := 0
 	for _, cell := range sheet.Rows[0].Cells {
-		value, err := cell.String()
-		if err != nil || value == "" {
+		value := cell.String()
+		if value == "" {
 			break
 		}
 		cols++
@@ -57,10 +57,7 @@ func (e *ExcelReader) GetMatrix(title string) ([][]string, error) {
 		temp := make([]string, cols)
 		allEmpty := true
 		for j := 0; j < cols && j < len(row.Cells); j++ {
-			value, err := row.Cells[j].String()
-			if err != nil {
-				return nil, err
-			}
+			value := row.Cells[j].String()
 			temp[j] = strings.TrimSpace(value)
 			allEmpty = allEmpty && (temp[j] == "")
 		}
