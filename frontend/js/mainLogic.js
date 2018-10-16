@@ -53,10 +53,11 @@ $(function() {
       	minChars: 1,
 		source: function(term, response){
     			$.getJSON('/services/autocomplete/' + $('#select').val(), { term: term }, function(data){ 
-				myCurrentWords = data;
+				//myCurrentWords = data;
 				response(data);
 				if (data.length > 0){
 					$('#notfoundText').hide();
+					myCurrentWords = data;
 				} else{
 					$('#notfoundText').show();
 					$('#container').hide();
@@ -66,9 +67,7 @@ $(function() {
 		},
 		renderItem: function (item, search){
        		search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-           	//var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
-			//var re = new RegExp("(" + search + ")", "gi");
-			var highlighted = highlight(item.w, search);
+		var highlighted = highlight(item.w, search);
            	return '<div class="autocomplete-suggestion" data-term="'+item.w+'" data-val="'+search+'">'+ '(' + item.t.substring(0, 2) + ') '+highlighted+'</div>';
         },
 		onSelect: function(e, term, item){

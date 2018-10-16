@@ -39,6 +39,14 @@ function searchWordIfPresent() {
 			return;
 		}
 	}
+	// try with one less
+	word = word.substr(0, word.length - 1);
+	for (i = 0; i < myCurrentWords.length; i++) {
+		if (mapToASCII(myCurrentWords[i].w).includes(word)) {
+			searchWord(myCurrentWords[i].w);
+			return;
+		}
+	}	
 	$('#notfoundText').show();
 	$('#container').hide();
 	$("#thanks").hide();

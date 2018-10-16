@@ -64,12 +64,14 @@ func (handler WebserviceHandler) IndexHTML(w http.ResponseWriter, r *http.Reques
 			results, err = handler.repo.Search(term, toLang, fromLang, baseLang)
 			if err != nil {
 				panic(fmt.Sprintf("Word %s does not exist in %s/%s dictionary", term, fromLang, toLang))
+				//http.Redirect(w, r, "/", http.StatusFound)
 			} else {
 				url := "/search/" + toLang[:3] + fromLang[:3] + "/" + term
 				if baseLang != "" {
 					url += "?lang=" + baseLang[:3]
 				}
 				http.Redirect(w, r, url, http.StatusFound)
+				return
 			}
 		}
 		content.Results = results

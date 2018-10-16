@@ -87,8 +87,9 @@ func (r *SqlRepo) GetWordsWithTerm(term string, lang1 string, lang2 string) (wor
 		return nil, err
 	}
 	words = make([]*SimpleWord, 0)
+	termWithDash := strings.Replace(term, " ", "-", -1)
 	for _, w := range words1 {
-		if strings.Contains(w.WordASCII, term) {
+		if strings.Contains(w.WordASCII, term) || strings.Contains(w.WordASCII, termWithDash) {
 			words = append(words, w)
 		}
 	}
@@ -126,6 +127,19 @@ func (r *SqlRepo) GetWords(lang1 string, lang2 string) (words1 []*SimpleWord, wo
 }
 
 func (r *SqlRepo) Search(word, fromLang, toLang, baseLang string) (words []*Word, err error) {
+	n := len(word)
+	for i := n; i >= n-1; i-- {
+		words, err = r.search(word, fromLang, toLang, baseLang)
+		if err != nil {
+			word = word[:len(word)-1]
+		} else {
+			break
+		}
+	}
+	return
+}
+
+func (r *SqlRepo) search(word, fromLang, toLang, baseLang string) (words []*Word, err error) {
 	var statement string
 	if fromLang == "english" {
 		statement = "SELECT id, description, definition, loc FROM english WHERE WORD=$1"

@@ -51,7 +51,13 @@ func (r *SqlRepo) GetLanguages(base string) []*Language {
 	result := make([]*Language, len(r.languages))
 	for i, _ := range r.languages {
 		lang := r.langMatrix[r.languages[i][:3]+base[:3]]
-		result[i] = &Language{Language: strings.Title(lang), Tag: r.languages[i][:3]}
+		newLang := &Language{Language: strings.Title(lang), Tag: r.languages[i][:3]}
+		if r.languages[i] == base {
+			result[i] = result[0]
+			result[0] = newLang
+		} else {
+			result[i] = newLang
+		}
 	}
 	return result
 }

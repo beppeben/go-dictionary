@@ -1,3 +1,4 @@
 config/config.toml
 go-dictionary
 frontend/excel/
+*.zip
