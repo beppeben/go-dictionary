@@ -89,7 +89,11 @@ func (handler WebserviceHandler) LoggingHandler(next http.Handler) http.Handler 
 func (handler WebserviceHandler) StatsHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
-		ip := strings.Split(r.RemoteAddr, ":")[0]
+		//ip := strings.Split(r.RemoteAddr, ":")[0]
+		ip := r.Header.Get("X-Real-IP")
+		if ip != "" {
+			ip = strings.Split(ip, ":")[0]
+		}
 		key := ip + r.UserAgent()
 		ps := context.Get(r, "params").(httprouter.Params)
 		term := ps.ByName("term")

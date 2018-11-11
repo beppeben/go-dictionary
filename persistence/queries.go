@@ -37,12 +37,14 @@ const (
 		"FROM english JOIN toeng ON toeng.syn=english.id OR toeng.enid=english.synonyms) "
 
 	searchWithSynonymsToAny = searchWithSynonymsBase +
-		"SELECT word, description, definition, loc FROM toeng " +
-		"INNER JOIN :lang ON toeng.enid=:lang.english_id;"
+		"SELECT word, description, definition, loc, genre.:lang FROM toeng " +
+		"INNER JOIN :lang ON toeng.enid=:lang.english_id " +
+		"LEFT JOIN genre on :lang.genre=genre.id;"
 
 	searchWithSynonymsToEng = searchWithSynonymsBase +
-		"SELECT word, description, definition, loc FROM toeng " +
-		"INNER JOIN english ON toeng.enid=english.id;"
+		"SELECT word, description, definition, loc, genre.english FROM toeng " +
+		"INNER JOIN english ON toeng.enid=english.id " +
+		"LEFT JOIN genre on english.genre=genre.id;"
 )
 
 func translationsAndForeignSynonymsStmt(lang1 string, lang2 string) string {
@@ -142,9 +144,13 @@ func (r *SqlRepo) Search(word, fromLang, toLang, baseLang string) (words []*Word
 func (r *SqlRepo) search(word, fromLang, toLang, baseLang string) (words []*Word, err error) {
 	var statement string
 	if fromLang == "english" {
-		statement = "SELECT id, description, definition, loc FROM english WHERE WORD=$1"
+		statement = "SELECT english.id, description, definition, loc, genre." + fromLang + " FROM english " +
+			"LEFT JOIN genre ON genre.id=english.genre " +
+			"WHERE WORD=$1"
 	} else {
-		statement = "SELECT english_id, description, definition, loc FROM :lang WHERE WORD=$1"
+		statement = "SELECT english_id, description, definition, loc, genre." + fromLang + " FROM :lang " +
+			"LEFT JOIN genre ON genre.id=:lang.genre " +
+			"WHERE WORD=$1"
 		statement = strings.Replace(statement, ":lang", fromLang, -1)
 	}
 	rows, err := r.handler.Conn().Query(statement, word)
@@ -154,12 +160,12 @@ func (r *SqlRepo) search(word, fromLang, toLang, baseLang string) (words []*Word
 	defer rows.Close()
 	words = make([]*Word, 0)
 	var enId int64
-	var description, definition, loc string
+	var description, definition, loc, genre string
 	for rows.Next() {
-		rows.Scan(&enId, &description, &definition, &loc)
+		rows.Scan(&enId, &description, &definition, &loc, &genre)
 		lang := &Language{Language: r.langMatrix[fromLang[:3]+baseLang[:3]], Tag: fromLang[:3]}
 		w := &Word{Word: word, Description: description, Definition: definition,
-			Locality: loc, Lang: lang}
+			Locality: loc, Lang: lang, Genre: genre}
 		translations, err := r.translate(w, toLang, baseLang, enId)
 		if err != nil {
 			log.Infoln(err.Error())
@@ -176,7 +182,6 @@ func (r *SqlRepo) search(word, fromLang, toLang, baseLang string) (words []*Word
 		statement = "SELECT fields." + baseLang + ", fields_expl." + baseLang + " FROM english " +
 			"INNER JOIN fields on english.field=fields.id " +
 			"INNER JOIN fields_expl ON fields.id=fields_expl.id WHERE english.id=$1"
-		log.Debug(statement)
 		frows, err := r.handler.Conn().Query(statement, enId)
 		if err != nil {
 			log.Infoln(err.Error())
@@ -209,13 +214,13 @@ func (r *SqlRepo) translate(word *Word, toLang string, baseLang string, enId int
 		return nil, err
 	}
 	defer rows.Close()
-	var wrd, description, definition, loc string
+	var wrd, description, definition, loc, genre string
 	for rows.Next() {
-		rows.Scan(&wrd, &description, &definition, &loc)
+		rows.Scan(&wrd, &description, &definition, &loc, &genre)
 		if word.Word != wrd || word.Lang.Tag != toLang[:3] {
 			lang := &Language{Language: r.langMatrix[toLang[:3]+baseLang[:3]], Tag: toLang[:3]}
 			w := &Word{Word: wrd, Description: description, Definition: definition,
-				Locality: loc, Lang: lang}
+				Locality: loc, Lang: lang, Genre: genre}
 			words = append(words, w)
 		}
 	}

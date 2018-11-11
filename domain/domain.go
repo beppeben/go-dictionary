@@ -10,6 +10,7 @@ type Word struct {
 	Lang         *Language
 	Field        string
 	FieldDesc    string
+	Genre        string
 	Description  string
 	Definition   string
 	Locality     string

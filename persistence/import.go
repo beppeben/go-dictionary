@@ -69,7 +69,7 @@ func getDbType(sample string, title string) string {
 			return "INT"
 		}
 	}
-	if title == "parent" || title == "synonyms" || title == "field" {
+	if title == "parent" || title == "synonyms" || title == "field" || title == "genre" {
 		return "INT"
 	}
 	if title == "english_id" {
@@ -307,6 +307,7 @@ func (r *SqlRepo) ResetDB() error {
 			log.Info("Removing all tables")
 			tx.Exec("DROP TABLE IF EXISTS web")
 			tx.Exec("DROP TABLE IF EXISTS fields_expl")
+			tx.Exec("DROP TABLE IF EXISTS genre")
 			tx.Exec("DROP TABLE IF EXISTS languages")
 			for _, lang := range r.languages {
 				if lang == "english" {
@@ -327,6 +328,7 @@ func (r *SqlRepo) ResetDB() error {
 		r.createTable(tx, "fields_expl", &ImportOptions{CheckHeaders: true})
 		_, err = tx.Exec("ALTER TABLE fields_expl ADD FOREIGN KEY(id) REFERENCES fields(id)")
 		checkError(err, "fields_expl")
+		r.createTable(tx, "genre", &ImportOptions{CheckHeaders: true})
 
 		r.createTable(tx, "web", &ImportOptions{})
 		_, err = tx.Exec("ALTER TABLE web ADD FOREIGN KEY(id) REFERENCES languages(id)")
@@ -342,6 +344,8 @@ func (r *SqlRepo) ResetDB() error {
 		checkError(err, "english")
 		_, err = tx.Exec("ALTER TABLE english ADD FOREIGN KEY(field) REFERENCES fields(id)")
 		checkError(err, "english")
+		_, err = tx.Exec("ALTER TABLE english ADD FOREIGN KEY(genre) REFERENCES genre(id)")
+		checkError(err, "english")
 
 		tx.Exec("CREATE INDEX idx ON english(synonyms)")
 		tx.Exec("CREATE INDEX wrd_eng ON english(word)")
@@ -354,6 +358,9 @@ func (r *SqlRepo) ResetDB() error {
 
 			_, err = tx.Exec("ALTER TABLE " + lang +
 				" ADD FOREIGN KEY(english_id) REFERENCES english(id)")
+			checkError(err, lang)
+
+			_, err = tx.Exec("ALTER TABLE " + lang + " ADD FOREIGN KEY(genre) REFERENCES genre(id)")
 			checkError(err, lang)
 
 			tx.Exec("CREATE INDEX wrd_" + lang[:3] + " ON " + lang + "(word)")

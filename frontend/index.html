@@ -15,7 +15,7 @@
 	<div class="page-wrap">
 
     <div style="max-width:900px;padding-top:40px;margin:0 auto;text-align:center">
-        <span class="title"><a class="titletext" href="/"><img src="/media/logo.png" height="200" width="200"></a></span>
+        <span class="title"><a class="titletext" href="/"><img src="/media/logo.png" height="185" width="185"></a></span>
         <h2 style="margin-top:0px">{{getString "header"}}</h2>
     </div>
     <form onsubmit="searchWordIfPresent();return false;" class="pure-form" style="border-top: 1px solid #eee;border-bottom:1px solid #eee;background:#fafafa;margin:30px 0;padding:20px 10px;text-align:center">
@@ -59,9 +59,9 @@
 					{{range $wordindex, $word := .Results}}
 						{{range $tranindex, $tran := $word.Translations}}
 							<tr class="{{oddOrEven $wordindex}}">
-								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}{{if $word.Locality}} ({{$word.Locality}}){{end}}</strong>{{end}}</td>
+								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}{{if $word.Locality}} ({{$word.Locality}}){{end}}</strong>{{if $word.Genre}} <i><font color="a9a9aa">{{$word.Genre}}</font></i>{{end}}{{end}}</td>
 								<td>{{if eq $tranindex 0}}{{if $word.Description}}(<i>{{$word.Description}}</i>) {{if $tran.Description}} <br /> {{end}}{{end}}{{end}} {{if $tran.Description}}  <span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
-								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{$tran.Word}}{{if $tran.Locality}} ({{$tran.Locality}}){{end}}</a></td>
+								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{$tran.Word}}{{if $tran.Locality}} ({{$tran.Locality}}){{end}}{{if $tran.Genre}} <i><font color="a9a9aa">{{$tran.Genre}}</font></i>{{end}}</a></td>
 							</tr>
 						{{end}}
 						{{if $word.Synonyms}}
