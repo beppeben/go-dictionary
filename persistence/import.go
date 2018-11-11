@@ -307,7 +307,6 @@ func (r *SqlRepo) ResetDB() error {
 			log.Info("Removing all tables")
 			tx.Exec("DROP TABLE IF EXISTS web")
 			tx.Exec("DROP TABLE IF EXISTS fields_expl")
-			tx.Exec("DROP TABLE IF EXISTS genre")
 			tx.Exec("DROP TABLE IF EXISTS languages")
 			for _, lang := range r.languages {
 				if lang == "english" {
@@ -317,6 +316,7 @@ func (r *SqlRepo) ResetDB() error {
 			}
 			tx.Exec("DROP TABLE IF EXISTS english")
 			tx.Exec("DROP TABLE IF EXISTS fields")
+			tx.Exec("DROP TABLE IF EXISTS genre")
 		}
 		var err error
 		if err = r.reader.RefreshFile(); err != nil {
