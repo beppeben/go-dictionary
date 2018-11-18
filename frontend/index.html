@@ -56,13 +56,22 @@
 					<tr class="langHeader">
 						<td>{{with $x := index .Results 0}}{{toUpper $x.Lang.Language}}</td><td></td><td>{{with $y:=index $x.Translations 0}}{{toUpper $y.Lang.Language}}{{end}}{{end}}</td>
 					</tr>
+					{{$worddesc := 1}}
 					{{range $wordindex, $word := .Results}}
 						{{range $tranindex, $tran := $word.Translations}}
+							{{$worddesc := and $word.Description (eq $tranindex 0)}}
 							<tr class="{{oddOrEven $wordindex}}">
 								<td>{{if eq $tranindex 0}}<strong>{{$word.Word}}{{if $word.Locality}} ({{$word.Locality}}){{end}}</strong>{{if $word.Genre}} <i><font color="a9a9aa">{{$word.Genre}}</font></i>{{end}}{{end}}</td>
-								<td>{{if eq $tranindex 0}}{{if $word.Description}}(<i>{{$word.Description}}</i>) {{if $tran.Description}} <br /> {{end}}{{end}}{{end}} {{if $tran.Description}}  <span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}</td>
+								<td>{{if $worddesc}}(<i>{{$word.Description}}</i>){{else}} {{if $tran.Description}}  <span class="todesc">(<i>{{$tran.Description}}</i>)</span>{{end}}{{end}}</td>
+								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{if or (not $worddesc) (not $tran.Description)}}{{$tran.Word}}{{if $tran.Locality}} ({{$tran.Locality}}){{end}}{{if $tran.Genre}} <i><font color="a9a9aa">{{$tran.Genre}}</font></i>{{end}}{{end}}</a></td>
+							</tr>
+							{{if and $worddesc $tran.Description}}
+							<tr class="{{oddOrEven $wordindex}}">
+								<td></td>
+								<td><span class="todesc">(<i>{{$tran.Description}}</i>)</span></td>
 								<td><a style="color:#777" href="/search/{{$tran.Lang.Tag}}{{$word.Lang.Tag}}/{{$tran.Word}}">{{$tran.Word}}{{if $tran.Locality}} ({{$tran.Locality}}){{end}}{{if $tran.Genre}} <i><font color="a9a9aa">{{$tran.Genre}}</font></i>{{end}}</a></td>
 							</tr>
+							{{end}}
 						{{end}}
 						{{if $word.Synonyms}}
 						{{$maxsyn := len $word.Synonyms | dec}}
