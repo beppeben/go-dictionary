@@ -47,6 +47,28 @@ const (
 		"LEFT JOIN genre on english.genre=genre.id;"
 )
 
+func (r *SqlRepo) GetCalendarEvents(month int, year int) (events []*CalendarEvent, err error) {
+	st := "SELECT * FROM cal_english WHERE " +
+		"EXTRACT(MONTH FROM start_date) = $1 AND EXTRACT(YEAR FROM start_date) = $2 OR " +
+		"EXTRACT(MONTH FROM end_date) = $1 AND EXTRACT(YEAR FROM end_date) = $2;"
+
+	rows, err := r.handler.Conn().Query(st, month, year)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		event := &CalendarEvent{}
+		err = rows.Scan(&event.Id, &event.StartDate, &event.EndDate, &event.Tag, &event.Title, &event.Description)
+		if err != nil {
+			return
+		}
+		events = append(events, event)
+	}
+	return
+}
+
 func translationsAndForeignSynonymsStmt(lang1 string, lang2 string) string {
 	var s string
 	if lang1 == lang2 {

@@ -17,8 +17,9 @@ func main() {
 	emailutils := utils.NewEmailUtils(config)
 
 	handler := persistence.NewMySqlHandler(config)
-	reader := excel.NewReader(config.GetExcelDir() + "mydb.xlsx")
-	repo := persistence.NewRepo(handler, reader)
+	dbReader := excel.NewReader(config.GetExcelDir() + "mydb.xlsx")
+	calReader := excel.NewReader(config.GetExcelDir() + "calendar.xlsx")
+	repo := persistence.NewRepo(handler, dbReader, calReader)
 
 	webhandler := web.NewWebHandler(repo, config, sysutils, emailutils)
 	webhandler.StartServer()

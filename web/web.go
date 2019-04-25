@@ -14,6 +14,8 @@ import (
 
 type Repository interface {
 	ResetDB() error
+	ResetCalendar() error
+	GetCalendarEvents(month int, year int) (events []*CalendarEvent, err error)
 	GetLangFromKey(key string) string
 	Search(word, fromLang, toLang, baseLang string) (words []*Word, err error)
 	GetWordsWithTerm(term string, lang1 string, lang2 string) (words []*SimpleWord, err error)
@@ -29,7 +31,7 @@ type ServerConfig interface {
 
 type SysUtils interface {
 	ExtractZipToHttpDir(file multipart.File, length int64) error
-	CopyFileToExcelDir(file multipart.File) error
+	CopyFileToExcelDir(file multipart.File, name string) error
 }
 
 type EmailUtils interface {
@@ -66,8 +68,11 @@ func (h WebserviceHandler) StartServer() {
 	h.mrouter.Get("/services/autocomplete/:langkey", commonHandlersNoStats.ThenFunc(h.Autocomplete))
 	h.mrouter.Post("/services/deployFront", commonHandlersNoStats.Append(h.BasicAuth).ThenFunc(h.DeployFront))
 	h.mrouter.Post("/services/deployDb", commonHandlersNoStats.Append(h.BasicAuth).ThenFunc(h.DeployDb))
+	h.mrouter.Post("/services/deployCal", commonHandlersNoStats.Append(h.BasicAuth).ThenFunc(h.DeployCal))
 	h.mrouter.Get("/services/notify", commonHandlersNoStats.ThenFunc(h.Notify))
 	h.mrouter.Get("/search/:langkey/:term", commonHandlers.ThenFunc(h.IndexHTML))
+	h.mrouter.Get("/calendar", commonHandlers.ThenFunc(h.CalendarHTMLDefault))
+	h.mrouter.Get("/calendar/:year/:month", commonHandlers.ThenFunc(h.CalendarHTML))
 	h.mrouter.Get("/index.html", commonHandlers.ThenFunc(h.IndexHTML))
 	h.mrouter.Get("/terms.html", commonHandlers.ThenFunc(h.TermsHTML))
 	h.mrouter.Get("/about.html", commonHandlers.ThenFunc(h.AboutHTML))

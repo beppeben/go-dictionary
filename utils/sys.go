@@ -25,8 +25,8 @@ func (u *Sys) ExtractZipToHttpDir(file multipart.File, length int64) error {
 	return extractZipToDir(file, length, u.config.GetHTTPDir())
 }
 
-func (u *Sys) CopyFileToExcelDir(file multipart.File) error {
-	return copyFileToPath(file, u.config.GetExcelDir(), "mydb.xlsx")
+func (u *Sys) CopyFileToExcelDir(file multipart.File, name string) error {
+	return copyFileToPath(file, u.config.GetExcelDir(), name)
 }
 
 func copyFileToPath(file multipart.File, dir string, filename string) error {
@@ -36,7 +36,7 @@ func copyFileToPath(file multipart.File, dir string, filename string) error {
 	}
 	err = os.Remove(dir + filename)
 	if err != nil {
-		return err
+		//return err
 	}
 	f, err := os.OpenFile(dir+filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {

@@ -1,0 +1,70 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/css/calendar.css">
+    <link rel="stylesheet" href="/css/mystyle.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <div style="margin:10px; text-align: center;"><a href="/"><img src="/media/logo.png" height="80" width="80"></a></div>
+    <div class="calendar-container">
+
+    <div class="calendar-header">
+        <h1 style="width: 200px;margin: auto;">
+        <a href="/calendar/{{.PrevYear}}/{{.PrevMonth}}" style="float:left"><</a>
+        {{.Month}} {{.Year}}
+        <a href="/calendar/{{.NextYear}}/{{.NextMonth}}" style="float:right">></a>
+        </h1>
+    </div>
+    <div class="calendar"><span class="day-name">Mon</span><span class="day-name">Tue</span><span class="day-name">Wed</span><span class="day-name">Thu</span><span class="day-name">Fri</span><span class="day-name">Sat</span><span class="day-name">Sun</span>
+        
+        {{range $day := .Days}}
+            <div class="day{{if not $day.Active}} day--disabled{{end}}" style="{{if $day.IsToday}}background-color: #f9f0da;{{end}}">{{$day.Day}}</div>
+        {{end}}    
+	  
+        {{range $event := .Events}}
+            <section id="task-{{$event.Id}}" class="task {{if eq $event.Level 0}}task-info-down{{else}}task-info-up{{end}}" style="grid-column: {{$event.Column}} / span {{$event.Span}}; grid-row: {{$event.Row}}; z-index:2; {{if $event.IsContinuation}}border-left-style: unset;{{end}}">{{$event.Tag}}
+                <div id="task-detail-{{$event.Id}}" class="task__detail" style="display:none;">
+                    <h2>{{$event.Title}}</h2>
+                    <p>{{$event.Description}}</p>
+                </div>
+            </section>
+        {{end}}
+        <!--
+        <section id="task-1" class="task task-info-down" style="grid-column: 3 / span 3; grid-row: 4;">Product Checkup 1
+            <div id="task-detail-1" class="task__detail" style="display:none;">
+                <h2>Product Checkup 1</h2>
+                <p>15-17th November</p>
+            </div>
+        </section>
+        <section id="task-2" class="task task-info-up" style="grid-column: 4 / span 3; grid-row: 4;">Hey hey hey
+            <div id="task-detail-2" class="task__detail" style="display:none;">
+                <h2>Blah</h2>
+                <p>Je ne sais pas</p>
+            </div>
+        </section>
+        -->
+    </div>
+    </div>
+
+    <script>
+        {{range $event := .Events}}
+            $("#task-{{$event.Id}}").click(function(){
+                if($("#task-detail-{{$event.Id}}").is(":visible")){
+                    $(".task__detail").hide();
+                    $("#task-detail-{{$event.Id}}").hide();
+                } else{
+                    $(".task__detail").hide();
+                    $("#task-detail-{{$event.Id}}").show();
+
+                    // trick to make the child visualize correctly
+                    var p = $("#task-{{$event.Id}}").detach();
+                    $(".calendar").append(p);
+                    $(".calendar").animate({scrollTop:$(".calendar").height()}, 'slow');
+                }
+            });
+        {{end}}
+    </script>
+
+</body>
+</html>

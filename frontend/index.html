@@ -24,13 +24,17 @@
 	<select id="select" class="selection" style="padding-left:25px; margin-left:10px;">
 	{{$langs := .Languages}}
 	{{range $lang1 := $langs}}
+	  {{if eq $lang1.Tag "eng" "fre" "ita" "ger" "spa"}}
 	  <optgroup label="{{$lang1.Language}}">
 		{{range $lang2 := $langs}}
+			{{if eq $lang2.Tag "eng" "fre" "ita" "ger" "spa"}}
 			{{if ne $lang1.Tag $lang2.Tag}}
 			<option value="{{$lang1.Tag}}{{$lang2.Tag}}">{{$lang1.Language}}-{{$lang2.Language}}</option>
 			{{end}}
+			{{end}}
 		{{end}}	    
 	  </optgroup>
+	  {{end}}
 	{{end}}
 	</select>
     </form>
@@ -99,24 +103,26 @@
 	</div>
 
 	<footer class="site-footer">
-		<div style="padding-top:40px">
-			
+		<div style="padding-top:30px">			
 			<a href="/about.html?lang={{.BaseLangTag}}"><span style="font-size: 0.9em;margin-right:40px">{{getString "about_us"}}</span></a>
 			<a href="/terms.html?lang={{.BaseLangTag}}"><span style="font-size: 0.9em;margin-right:40px">{{getString "terms_short"}}</span></a>
-			
 			<select id="mainlang" class="selection" style="font-size: 0.9em">
 				{{$base := .BaseLangTag}}
 				{{range $lang := .Languages}}
 					<option value="{{$lang.Tag}}" {{if eq $lang.Tag $base}}selected{{end}} >{{$lang.Language}}</option>  
 				{{end}}
 			</select>
-        </div>
-        
+        	</div>
+		<div style="padding-top:20px">
+			<a href="https://co.pinterest.com/azjewelslexicon/?eq=AZ%20JEWELS%20lexicon&etslf=4574"><img src="/media/pinterest.png" style="margin-right:40px" height="20" width="20"></a>
+			<a href="https://www.instagram.com/azjewels.xyz/"><img src="/media/instagram.png" style="margin-right:40px" height="20" width="20"></a>
+			<a href="https://www.linkedin.com/company/azjewels-xyz/"><img src="/media/linkedin.png" style="margin-right:10px" height="20" width="20"></a>
+        	</div> 
 	</footer>
 	
     <script src="/js/jquery-1.11.1.min.js"></script>
     <script src="/js/jquery.auto-complete.js"></script>
-	<script src="/js/mainLogic.js"></script>
+    <script src="/js/mainLogic.js"></script>
 
 </body>
 </html>

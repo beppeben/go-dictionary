@@ -21,7 +21,8 @@ type DbHandler interface {
 
 type SqlRepo struct {
 	handler   DbHandler
-	reader    *excel.ExcelReader
+	dbReader  *excel.ExcelReader
+	calReader *excel.ExcelReader
 	languages []string
 	//from key to english language name
 	langMap map[string]string
@@ -37,10 +38,11 @@ type ImportOptions struct {
 	CheckHeaders bool
 	AutoId       bool
 	Square       bool
+	FromCalendar bool
 }
 
-func NewRepo(h DbHandler, r *excel.ExcelReader) *SqlRepo {
-	repo := &SqlRepo{handler: h, reader: r}
+func NewRepo(h DbHandler, r *excel.ExcelReader, c *excel.ExcelReader) *SqlRepo {
+	repo := &SqlRepo{handler: h, dbReader: r, calReader: c}
 	repo.refreshLanguages()
 	repo.refreshLanguageMaps()
 	repo.refreshWordsCache()
@@ -77,6 +79,9 @@ func getDbType(sample string, title string) string {
 	}
 	if title == "description" || title == "definition" || title == "about_html" || title == "terms_html" {
 		return "VARCHAR(10000)"
+	}
+	if strings.Contains(title, "date") {
+		return "DATE"
 	}
 	return "VARCHAR(255)"
 }
@@ -278,7 +283,13 @@ func (r *SqlRepo) checkLanguageHeaders(title string, headers []string) error {
 
 func (r *SqlRepo) createTable(tx *sql.Tx, title string, opts *ImportOptions) {
 	log.Infof("Creating %v table", title)
-	matrix, err := r.reader.GetMatrix(title)
+	var matrix [][]string
+	var err error
+	if opts.FromCalendar {
+		matrix, err = r.calReader.GetMatrix(title)
+	} else {
+		matrix, err = r.dbReader.GetMatrix(title)
+	}
 	checkError(err, title)
 	if opts.Square {
 		for i := 1; i < len(matrix[0]); i++ {
@@ -296,8 +307,25 @@ func (r *SqlRepo) createTable(tx *sql.Tx, title string, opts *ImportOptions) {
 	r.createTableFromMatrix(tx, title, matrix, opts.AutoId)
 }
 
+func (r *SqlRepo) ResetCalendar() error {
+	err := r.calReader.RefreshFile()
+	if err != nil {
+		return err
+	}
+	err = r.handler.TransactNoRet(func(tx *sql.Tx) error {
+		tx.Exec("DROP TABLE IF EXISTS cal_english")
+		var err error
+		if err = r.calReader.RefreshFile(); err != nil {
+			panic(err.Error())
+		}
+		r.createTable(tx, "cal_english", &ImportOptions{FromCalendar: true})
+		return err
+	})
+	return err
+}
+
 func (r *SqlRepo) ResetDB() error {
-	err := r.reader.RefreshFile()
+	err := r.dbReader.RefreshFile()
 	if err != nil {
 		return err
 	}
@@ -319,7 +347,7 @@ func (r *SqlRepo) ResetDB() error {
 			tx.Exec("DROP TABLE IF EXISTS genre")
 		}
 		var err error
-		if err = r.reader.RefreshFile(); err != nil {
+		if err = r.dbReader.RefreshFile(); err != nil {
 			panic(err.Error())
 		}
 		r.createTable(tx, "languages", &ImportOptions{Square: true})

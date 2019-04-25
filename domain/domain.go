@@ -2,7 +2,17 @@ package domain
 
 import (
 	"strings"
+	"time"
 )
+
+type CalendarEvent struct {
+	Id          int64
+	StartDate   time.Time
+	EndDate     time.Time
+	Tag         string
+	Title       string
+	Description string
+}
 
 type Word struct {
 	//LangKey      string
