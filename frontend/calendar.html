@@ -26,7 +26,7 @@
             <section id="task-{{$event.Id}}" class="task {{if eq $event.Level 0}}task-info-down{{else}}task-info-up{{end}}" style="grid-column: {{$event.Column}} / span {{$event.Span}}; grid-row: {{$event.Row}}; z-index:2; {{if $event.IsContinuation}}border-left-style: unset;{{end}}">{{$event.Tag}}
                 <div id="task-detail-{{$event.Id}}" class="task__detail" style="display:none;">
                     <h2>{{$event.Title}}</h2>
-                    <p>{{$event.Description}}</p>
+                    {{$event.Description}}
                 </div>
             </section>
         {{end}}

@@ -37,7 +37,7 @@ type CalendarEventHtml struct {
 	Id             int
 	Tag            string
 	Title          string
-	Description    string
+	Description    template.HTML
 	Level          int
 	Row            int
 	Column         int
@@ -163,7 +163,7 @@ func (handler WebserviceHandler) CalendarHTML(w http.ResponseWriter, r *http.Req
 	html_events := make([]CalendarEventHtml, 0)
 	counter := 1
 	for i, _ := range events {
-		html_event := CalendarEventHtml{Id: counter, Tag: events[i].Tag, Title: events[i].Title, Description: events[i].Description}
+		html_event := CalendarEventHtml{Id: counter, Tag: events[i].Tag, Title: events[i].Title, Description: template.HTML(events[i].Description)}
 		counter = counter + 1
 		for j := 0; j < i; j++ {
 			if !events[j].EndDate.Before(events[i].StartDate) && !events[j].StartDate.After(events[i].EndDate) {
@@ -189,8 +189,8 @@ func (handler WebserviceHandler) CalendarHTML(w http.ResponseWriter, r *http.Req
 		row := html_event.Row
 		column := html_event.Column
 		span := html_event.Span
-		for column+span > 7 && row < max_row {
-			span = span - (7 - column)
+		for column+span > 8 && row < max_row {
+			span = span - (8 - column)
 			column = 1
 			row = row + 1
 			copy_event := html_event
