@@ -1,6 +1,9 @@
 <!DOCTYPE html><html lang="en">
 <head>
     <meta charset="utf-8">
+    <title>Calendar</title>
+	<meta name="keywords" content="jewelry, horology, luxury goods, dictionary, translations">
+    <link rel="icon" href="/media/favicon.ico"/>
     <link rel="stylesheet" href="/css/calendar.css">
     <link rel="stylesheet" href="/css/mystyle.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -23,7 +26,7 @@
         {{end}}    
 	  
         {{range $event := .Events}}
-            <section id="task-{{$event.Id}}" class="task {{if eq $event.Level 0}}task-info-down{{else}}task-info-up{{end}}" style="grid-column: {{$event.Column}} / span {{$event.Span}}; grid-row: {{$event.Row}}; z-index:2; {{if $event.IsContinuation}}border-left-style: unset;{{end}}">{{$event.Tag}}
+            <section id="task-{{$event.Id}}" class="task {{if eq $event.Level 0}}task-info-down{{else}}{{if eq $event.Level 1}}task-info-med{{else}}task-info-up{{end}}{{end}}" style="grid-column: {{$event.Column}} / span {{$event.Span}}; grid-row: {{$event.Row}}; z-index:2; {{if $event.IsContinuation}}border-left-style: unset;{{end}}">{{getShort $event.Tag $event.Span}}
                 <div id="task-detail-{{$event.Id}}" class="task__detail" style="display:none;">
                     <h2>{{$event.Title}}</h2>
                     {{$event.Description}}

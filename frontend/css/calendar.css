@@ -15,9 +15,9 @@ body {
 .calendar {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  grid-template-columns: repeat(7, minmax(100px, 1fr));
   grid-template-rows: 50px;
-  grid-auto-rows: 120px;
+  grid-auto-rows: 100px;
   overflow: auto;
 }
 .calendar-container {
@@ -27,7 +27,7 @@ body {
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   background: #fff;
-  max-width: 1200px;
+  max-width: 1000px;
 }
 .calendar-header {
   text-align: center;
@@ -124,10 +124,10 @@ body {
 
 .task {
   border-left-width: 3px;
-  padding: 8px 12px;
-  margin: 10px;
+  padding: 2px 12px;
+  margin: 4px;
   border-left-style: solid;
-  font-size: 14px;
+  font-size: 12px;
   position: relative;
 }
 .task--warning {
@@ -158,10 +158,17 @@ body {
   color: #0a5eff;
 }
 .task-info-up {
-  margin-top: -5px;
+    border-left-color: #4786ff;
+    background: rgba(218, 231, 255, 0.7);
+    align-self: end;
+    margin-bottom: 50px;
+    color: #0a5eff;
+}
+.task-info-med {
   border-left-color: #4786ff;
   background: rgba(218, 231, 255, 0.7);
-  align-self: center;
+  align-self: end;
+  margin-bottom: 27px;
   color: #0a5eff;
 }
 .task-info-down {
@@ -169,7 +176,7 @@ body {
     background: rgba(218, 231, 255, 0.7);
     align-self: end;
     color: #0a5eff;
-  }
+}
 .task--primary {
   background: #4786ff;
   border: 0;

@@ -8,17 +8,21 @@ type AppConfig struct {
 	v *viper.Viper
 }
 
-func NewAppConfig() *AppConfig {
+func NewConfig(path string) *AppConfig {
 	v := viper.New()
 	v.SetConfigName("config")
 	v.SetConfigType("toml")
-	v.AddConfigPath("./config/")
+	v.AddConfigPath(path)
 	err := v.ReadInConfig()
 	if err != nil {
 		panic(err.Error())
 	}
 
 	return &AppConfig{v}
+}
+
+func NewAppConfig() *AppConfig {
+	return NewConfig("./config/")
 }
 
 func NewCustomAppConfig(v *viper.Viper) *AppConfig {
@@ -71,4 +75,8 @@ func (val *AppConfig) GetSMTPPort() string {
 
 func (val *AppConfig) GetAdminEmails() []string {
 	return val.v.GetStringSlice("ADMIN_EMAILS")
+}
+
+func (val *AppConfig) GetSlackHook() string {
+	return val.v.GetString("SLACK_HOOK")
 }

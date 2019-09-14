@@ -26,11 +26,11 @@ type User struct {
 type StatsTracker struct {
 	mutex     sync.Mutex
 	keyToUser map[string]*User
-	eutils    EmailUtils
+	msgutils  MessageUtils
 }
 
-func NewStatsTracker(e EmailUtils) *StatsTracker {
-	stats := &StatsTracker{eutils: e}
+func NewStatsTracker(e MessageUtils) *StatsTracker {
+	stats := &StatsTracker{msgutils: e}
 	stats.keyToUser = make(map[string]*User)
 
 	c := gron.New()
@@ -66,7 +66,7 @@ func (stats *StatsTracker) sendSummaryAndClear() {
 			buffer.WriteString(".")
 		}
 	}
-	stats.eutils.SendEmailToAdmins("Daily Report", buffer.String())
+	stats.msgutils.SendToSlack("Daily Report: " + buffer.String())
 	stats.keyToUser = make(map[string]*User)
 }
 

@@ -77,6 +77,13 @@ func (handler WebserviceHandler) getHelpers(baseLang string) template.FuncMap {
 		"getHtml": func(key string) template.HTML {
 			return template.HTML(handler.repo.GetWebTerm(baseLang, key))
 		},
+		"getShort": func(text string, span int) string {
+			max_len := span * 15
+			if len(text) > max_len {
+				text = text[:(max_len-2)] + ".."
+			}
+			return text
+		},
 	}
 }
 
@@ -165,15 +172,12 @@ func (handler WebserviceHandler) CalendarHTML(w http.ResponseWriter, r *http.Req
 	for i, _ := range events {
 		html_event := CalendarEventHtml{Id: counter, Tag: events[i].Tag, Title: events[i].Title, Description: template.HTML(events[i].Description)}
 		counter = counter + 1
-		for j := 0; j < i; j++ {
-			if !events[j].EndDate.Before(events[i].StartDate) && !events[j].StartDate.After(events[i].EndDate) {
-				html_event.Level = html_event.Level + 1
-			}
-		}
 		/*
-			html_event.Row = (events[i].StartDate.Day()+start_lag-1)/7 + 2
-			html_event.Column = (events[i].StartDate.Day()+start_lag-1)%7 + 1
-			html_event.Span = int(events[i].EndDate.Sub(events[i].StartDate).Hours()/24) + 1
+			for j := 0; j < i; j++ {
+				if !events[j].EndDate.Before(events[i].StartDate) && !events[j].StartDate.After(events[i].EndDate) {
+					html_event.Level = html_event.Level + 1
+				}
+			}
 		*/
 		html_event.Row = (positive(events[i].StartDate.Sub(first_day).Hours()/24))/7 + 2
 		html_event.Column = (positive(events[i].StartDate.Sub(first_day).Hours()/24))%7 + 1
@@ -190,6 +194,7 @@ func (handler WebserviceHandler) CalendarHTML(w http.ResponseWriter, r *http.Req
 		column := html_event.Column
 		span := html_event.Span
 		for column+span > 8 && row < max_row {
+			html_events[len(html_events)-1].Span = (8 - column)
 			span = span - (8 - column)
 			column = 1
 			row = row + 1
@@ -201,6 +206,24 @@ func (handler WebserviceHandler) CalendarHTML(w http.ResponseWriter, r *http.Req
 			copy_event.IsContinuation = true
 			counter = counter + 1
 			html_events = append(html_events, copy_event)
+		}
+	}
+
+	// compute visualization level (so they don't overlap)
+	for i, _ := range html_events {
+		var level_taken [50]bool
+		for j := 0; j < i; j++ {
+			if html_events[i].Row == html_events[j].Row &&
+				(html_events[i].Column >= html_events[j].Column && html_events[i].Column < html_events[j].Column+html_events[j].Span ||
+					html_events[j].Column >= html_events[i].Column && html_events[j].Column < html_events[i].Column+html_events[i].Span) {
+				level_taken[html_events[j].Level] = true
+			}
+		}
+		for k, taken := range level_taken {
+			if !taken {
+				html_events[i].Level = k
+				break
+			}
 		}
 	}
 
@@ -291,7 +314,7 @@ func (handler WebserviceHandler) Notify(w http.ResponseWriter, r *http.Request) 
 	}
 	message := "Word: " + term + "\nDictionary: " + fromLang + "-" + toLang
 	go func() {
-		err := handler.eutils.SendEmailToAdmins("Suggestion received", message)
+		err := handler.msgutils.SendToSlack("Suggestion received: " + message)
 		if err != nil {
 			log.Info(err.Error())
 		}

@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"fmt"
+	//"fmt"
 	"testing"
 )
 
 func TestStrings(t *testing.T) {
-	fmt.Println(MapToASCII("Clément"))
-	fmt.Println(MapToASCII("àéùciaoç"))
+	config := NewConfig("../config/")
+	msgutils := NewMessageUtils(config)
+	msgutils.SendToSlack("test")
 }

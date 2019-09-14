@@ -34,28 +34,29 @@ type SysUtils interface {
 	CopyFileToExcelDir(file multipart.File, name string) error
 }
 
-type EmailUtils interface {
-	SendEmail(email, title, text string) error
-	SendEmailToAdmins(subject, body string) error
+type MessageUtils interface {
+	//SendEmail(email, title, text string) error
+	//SendEmailToAdmins(subject, body string) error
+	SendToSlack(text string) error
 }
 
 type WebserviceHandler struct {
-	repo    Repository
-	frouter *http.ServeMux
-	mrouter *router
-	config  ServerConfig
-	sutils  SysUtils
-	eutils  EmailUtils
-	stats   *StatsTracker
+	repo     Repository
+	frouter  *http.ServeMux
+	mrouter  *router
+	config   ServerConfig
+	sutils   SysUtils
+	msgutils MessageUtils
+	stats    *StatsTracker
 }
 
 type router struct {
 	*httprouter.Router
 }
 
-func NewWebHandler(repo Repository, c ServerConfig, s SysUtils, e EmailUtils) *WebserviceHandler {
+func NewWebHandler(repo Repository, c ServerConfig, s SysUtils, e MessageUtils) *WebserviceHandler {
 	tracker := NewStatsTracker(e)
-	return &WebserviceHandler{repo: repo, config: c, sutils: s, eutils: e, stats: tracker}
+	return &WebserviceHandler{repo: repo, config: c, sutils: s, msgutils: e, stats: tracker}
 }
 
 func (h WebserviceHandler) StartServer() {
